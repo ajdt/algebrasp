@@ -40,8 +40,9 @@ depth(ID,0)		:- root(ID,S). 		% every root starts at depth zero
 type(ID, mono)											:-	node(ID), depth(ID, Depth), Depth >= max_depth. 			
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%% POLY NODES  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-1 {node_oper(ID, Op) : operator(Op) } 1 				:-	type(ID, poly) .				% poly nodes have a single operator...
-1 { num_children(ID, Terms) : term_num(Terms) } 1 		:-	type(ID, poly).					% ..and some number of children 
+1 {node_oper(ID, Op) : operator(Op) } 1 				:-	type(ID, poly) .										% poly nodes have a single operator...
+1 { num_children(ID, Terms) : term_num(Terms) } 1 		:-	type(ID, poly), not node_oper(ID, div).					% ..and some number of children 
+num_children(ID, 2) 									:-	type(ID, poly), node_oper(ID, div).						% divison operators have exactly two children
 
 % generate parent relationship.
 1 { parentOf(ID, ID*max_terms + IDNum) } 1				:- 	num_children(ID, Num), IDNum = 1..Num. 
@@ -61,4 +62,3 @@ depth(ChildID, Depth+1)	:-	parentOf(ParentID, ChildID), depth(ParentID, Depth).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%% CONSTRAINTS %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 :-	depth(ID, Depth), Depth > max_depth.		% sanity check, can't have nodes beyond max depth
-
