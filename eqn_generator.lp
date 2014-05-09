@@ -1,10 +1,8 @@
 % Armando Diaz Tolentino <ajdt@cs.washington.edu> 
 % 
 % A simple ASP program to generate algebraic equations as an expression tree.
-% Each node has an id(depth, id_num) predicate that uniquely identifies the node.
-% depth refers to the node's depth from the root of the expression tree. 
-% id_num is the node's placement in an ordering of it's parent's children.
-% We identify a node by node(ID), where ID = id(depth, id_num).
+% Each node has an id numer that is unique and given by the formula: parentID * max_terms + num_term
+% Nodes have a depth value, so that we don't create expression trees exceeding some maximum depth.
 % 
 % each node also has a type (i.e. type(ID, mono;poly) ). poly types are internal
 % nodes and have operators and children assigned to them. 
@@ -29,32 +27,30 @@ operator(add;mul;div).
 node_type(poly;mono).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%% ROOT NODES  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-root(id(0,0), left).			% hardcoded left and right roots
-root(id(0,1), right).
+root(0, left).			% hardcoded left and right roots
+root(1, right).
 side(ID, S)		:- root(ID,S).
 node(ID) 		:- root(ID,S).
+depth(ID,0)		:- root(ID,S). 		% every root starts at depth zero
 
-
-% alternate definition of root nodes
-%root( node(id(0,0),S) )	:- 	side(S).							%	every side of an equation has a root, with id(0,0)
-%node(ID,S)				:-	root(node(ID,S)).							%	every root node is also an ordinary node
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%% ASSIGNING TYPES TO NODES  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% every node has exactly one type
-1 { type(id(Depth, IDNum), Type) : node_type(Type) } 1	:-	node(id(Depth, IDNum)), Depth < max_depth. 		% WHY DOESN'T pooling "1 { type(ID, mono;poly) } 1	:-	node(ID)." behave as in gringo3 ??
-type(id(Depth, IDNum), mono)							:-	node(id(Depth, IDNum)), Depth >= max_depth. 			
+% every node has exactly one type. If below depth threshold, can choose that type, otherwise it's a monomial
+1 { type(ID, Type) : node_type(Type) } 1				:-	node(ID), depth(ID, Depth), Depth < max_depth. 	% WHY DOESN'T pooling "1 { type(ID, mono;poly) } 1	:-	node(ID)." behave as in gringo3 ??
+type(ID, mono)											:-	node(ID), depth(ID, Depth), Depth >= max_depth. 			
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%% POLY NODES  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% poly nodes have a single operator...
-1 {node_oper(ID, Op) : operator(Op) } 1 				:-	node(ID), type(ID, poly) .
-% ..and some number of children 
-1 { num_children(ID, Terms) : term_num(Terms) } 1 		:-	type(ID, poly).
-1 { parentOf(id(Depth, PIDNum), id(Depth+1, IDNum)) } 1	:- 	num_children(id(Depth, PIDNum), Num), IDNum = 1..Num. % generate child nodes
+1 {node_oper(ID, Op) : operator(Op) } 1 				:-	type(ID, poly) .				% poly nodes have a single operator...
+1 { num_children(ID, Terms) : term_num(Terms) } 1 		:-	type(ID, poly).					% ..and some number of children 
+
+% generate parent relationship.
+1 { parentOf(ID, ID*max_terms + IDNum) } 1				:- 	num_children(ID, Num), IDNum = 1..Num. 
 
 % generate child node
-node(ID) 		:- parentOf(PID, ID).
-% every child has same side as parent...
-side(ID, S) 	:- parentOf(PID, ID), side(PID, S).
+node(ID) 				:- parentOf(PID, ID).
+% every child has same side as parent, and depth plus 1...
+side(ID, S) 			:- parentOf(PID, ID), side(PID, S).
+depth(ChildID, Depth+1)	:-	parentOf(ParentID, ChildID), depth(ParentID, Depth).
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%% MONOMIALS %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -64,5 +60,5 @@ side(ID, S) 	:- parentOf(PID, ID), side(PID, S).
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%% CONSTRAINTS %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-:-	node(id(Depth, IdNum)), Depth > max_depth.		% sanity check, can't have nodes beyond max depth
+:-	depth(ID, Depth), Depth > max_depth.		% sanity check, can't have nodes beyond max depth
 
