@@ -9,24 +9,24 @@ step(0..max_steps).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%% EQN STATES AT GIVEN STEP %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % all of the facts created by eqn_generator initially hold 
-initially(node(N))				:-	node(N).
-initially(type(ID,T))			:-	type(ID,T).
-initially(node_oper(ID,Op))		:-	node_oper(ID,Op).
-initially(num_children(ID,Num))	:-	num_children(ID,Num).
-initially(parentOf(PID, CID))	:-	parentOf(PID, CID).
-initially(side(ID, S))			:-	side(ID, S).
-initially(depth(ID, D))			:-	depth(ID, D).
-initially(node_coef(ID, C))		:-	node_coef(ID, C).
-initially(node_deg(ID, D))		:-	node_deg(ID, D).
+initially(N, node(N))				:-	node(N).
+initially(ID, type(T))				:-	type(ID,T).
+initially(ID, node_oper(Op))		:-	node_oper(ID,Op).
+initially(ID, num_children(Num))	:-	num_children(ID,Num).
+initially(PID, parentOf(CID))		:-	parentOf(PID, CID).
+initially(ID, side(S))				:-	side(ID, S).
+initially(ID, depth(D))				:-	depth(ID, D).
+initially(ID, node_coef(C))			:-	node_coef(ID, C).
+initially(ID, node_deg(D))			:-	node_deg(ID, D).
 
 
 % all initial facts hold at step zero
-holds(0, Fact)		:-	initially(Fact).
+holds(ID, Fact, 0)		:-	initially(ID, Fact).
 
 
 % every fact that isn't removed at step S, holds at the next step
-holds(S+1, Fact)	:-	holds(S, Fact), not removed(S, Fact), step(S+1).
-holds(S+1, Fact)	:-	assigned(S, Fact), step(S+1). % new fact that is generated
+holds(ID, Fact, S+1)	:-	holds(ID, Fact, S), not removed(ID, Fact, S), step(S+1).
+holds(ID, Fact, S+1)	:-	assigned(ID, Fact, S), step(S+1). % new fact that is generated
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%% SOLVER RULES %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % possible actions:
@@ -39,7 +39,62 @@ holds(S+1, Fact)	:-	assigned(S, Fact), step(S+1). % new fact that is generated
 %   for every possible action, we select one action to be performed
 % 	then for the performed action, we follow the required steps
 
+% rule: a*x^b + c*x^b ==> (a+c)*x^b
+possible(action(addCommonTerms(N1, C1, C2)), S) 	:- 	holds(N1, node(N1), S), 
+											holds(N1, type(poly), S),
+											holds(N1, node_oper(add), S),
+											holds(N1, parentOf(C1), S),
+											holds(N1, parentOf(C2), S),
+											holds(C1, type(mono), S),
+											holds(C2, type(mono), S),
+											holds(C1, node_deg(Deg), S),
+											holds(C2, node_deg(Deg), S),
+											holds(C1, node_coef(X), S),
+											holds(C2, node_coef(Y), S),
+											X != 0,% remove
+											Y != 0,% remove
+											C1 != C2.
+% do no more than one action per time step
+%0 { do_action(Action, S) : possible(Action, S) } 1 :- step(S).
+%
+%% add the two nodes together, case where parent still has at least two children
+%assigned(S, node_coef(C1, Coeff1 + Coeff2)) :- do_action(action(addCommonTerms(N1, C1, C2)), S),
+%												holds(S, node_coef(C1, Coeff1)),
+%												holds(S, node_coef(C2, Coeff2)),
+%												holds(S, node_deg(C1, Deg).
+%assigned(S, node_coef(C1, Coeff1 + Coeff2)) :- do_action(action(addCommonTerms(N1, C1, C2)), S),
+%												holds(S, node_coef(C1, Coeff1)),
+%												holds(S, node_coef(C2, Coeff2)),
+%												holds(S, node_deg(C1, Deg).
+%
+%removed(S, node(C1, Coeff1 + Coeff2)) :- do_action(action(addCommonTerms(N1, C1, C2)), S),
+%												holds(S, node_coef(C1, Coeff1)),
+%												holds(S, node_coef(C2, Coeff2)),
+%												holds(S, node_deg(C1, Deg).
+%
 
 
-#show holds/2.
+% TODO: remove this is just for testing:
+_node(N)              :-	node(N).              
+_type(ID,T)           :-	type(ID,T).           
+_node_oper(ID,Op)     :-	node_oper(ID,Op).     
+_num_children(ID,Num) :-	num_children(ID,Num). 
+_parentOf(PID, CID)   :-	parentOf(PID, CID).   
+_side(ID, S)          :-	side(ID, S).          
+_depth(ID, D)         :-	depth(ID, D).         
+_node_coef(ID, C)     :-	node_coef(ID, C).     
+_node_deg(ID, D)      :-	node_deg(ID, D).      
 
+
+%#show holds/2.
+%#show action/1.
+#show possible/2.
+#show _node/1.
+#show _type/2.
+#show _node_oper/2.
+#show _num_children/2.
+#show _parentOf/2.
+#show _side/2.
+#show _depth/2.
+#show _node_coef/2.
+#show _node_deg/2.
