@@ -121,6 +121,17 @@ _nodeCoef(ID, C)     	:-	nodeCoef(ID, C).
 _nodeDeg(ID, D)      	:-	nodeDeg(ID, D).      
 
 
+% TODO: remove. Used by eqn visualizer
+_node(ID, S)            	:-	holds(ID, node(N), S).			
+_type(ID,T, S)				:-	holds(ID, type(T), S).			
+_nodeOper(ID,Op, S)			:-	holds(ID, nodeOper(Op), S).		
+_numChildren(ID,Num, S)		:-	holds(ID, numChildren(Num), S).	
+_parentOf(ID, CID, S)		:-	holds(ID, parentOf(CID), S).	
+_side(ID, S, S)				:-	holds(ID, side(S), S).			
+_depth(ID, D, S)			:-	holds(ID, depth(D), S).			
+_nodeCoef(ID, C, S)			:-	holds(ID, nodeCoef(C), S).		
+_nodeDeg(ID, D, S)			:-	holds(ID, nodeDeg(D), S).		
+
 %#show holds/2.
 %#show action/1.
 #show action/1.
@@ -133,3 +144,15 @@ _nodeDeg(ID, D)      	:-	nodeDeg(ID, D).
 #show _depth/2.
 #show _nodeCoef/2.
 #show _nodeDeg/2.
+
+% used for eqn solver steps
+#show _node/2.
+#show _type/3.
+#show _nodeOper/3.
+#show _numChildren/3.
+#show _parentOf/3.
+#show _side/3.
+#show _depth/3.
+#show _nodeCoef/3.
+#show _nodeDeg/3.
+
