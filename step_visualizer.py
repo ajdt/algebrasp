@@ -45,7 +45,7 @@ def formEqnStepString(predicates_list):
 	for step in sorted(all_steps):
 		every_step.append(str(step) + ':\t' + eqnString(types[step], operator[step], mono[step], degree[step], coef[step], children[step]))
 
-	return '\n'.join(every_step)
+	return '\n'.join(every_step) + '\n'
 
 def main():
 	clasp_output = ''.join(sys.stdin.xreadlines())

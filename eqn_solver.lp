@@ -5,7 +5,7 @@
 %
 % NOTE: this file depends on eqn_rule for the rules used to solve an equation!
 
-#const max_steps = 1. % max number of actions until a solution is reached
+#const max_steps = 3. % max number of actions until a solution is reached
 step(0..max_steps). 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%% EQN STATES AT GIVEN STEP %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -46,9 +46,12 @@ removed(N1, Fact, S)	:- inheritFrom(N1, C1, S), holds(N1, Fact, S).
 
 
 
-% TODO: find out why this rule is Soooo slow
 % do no more than one action per time step
 0 { do_action(Action, S) : possible(Action, S) } 1 :- step(S).
+
+% avoid no-ops between rule applications. All rule applications happen first.
+actionforStep(S) :- do_action(Action,S).
+:- step(S), step(S+1), not actionforStep(S), actionforStep(S+1).
 
 
 
