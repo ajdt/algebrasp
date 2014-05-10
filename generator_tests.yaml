@@ -49,19 +49,19 @@ Test nodes cannot be their own parents:
 Test each poly has an operation:
   Modules: generator
   Program: |
-    :- node(ID), type(ID,poly), 0 { node_oper(ID, OP) : operator(OP)} 0.
+    :- node(ID), type(ID,poly), 0 { nodeOper(ID, OP) : operator(OP)} 0.
   Expect: SAT
 
 Test monomials do not have operators:
   Modules: generator
   Program: |
-    :- node(ID), type(ID,mono), node_oper(ID,Op).
+    :- node(ID), type(ID,mono), nodeOper(ID,Op).
   Expect: SAT
 
 Test polys do not have coefficients:
   Modules: generator
   Program: |
-    :- node(ID), type(ID,poly), node_coef(ID,Coeff).
+    :- node(ID), type(ID,poly), nodeCoef(ID,Coeff).
   Expect: SAT
 
 #Test x+1=3 is a valid equation:

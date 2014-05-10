@@ -17,14 +17,14 @@
 #const max_depth 	= 2.
 #const max_terms	= 3.		% max number of children a
 
-coeff_value(-max_coeff..max_coeff).
+coeffValue(-max_coeff..max_coeff).
 degree(0..max_degree).
-term_num(2..max_terms). 		% used for numbering children in a subtree
+termNum(2..max_terms). 		% used for numbering children in a subtree
 
 % sides of an equation
 side(left;right).
 operator(add;mul;div).
-node_type(poly;mono).
+nodeType(poly;mono).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%% ROOT NODES  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 root(0, left).			% hardcoded left and right roots
@@ -36,16 +36,16 @@ depth(ID,0)		:- root(ID,S). 		% every root starts at depth zero
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%% ASSIGNING TYPES TO NODES  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % every node has exactly one type. If below depth threshold, can choose that type, otherwise it's a monomial
-1 { type(ID, Type) : node_type(Type) } 1				:-	node(ID), depth(ID, Depth), Depth < max_depth. 	% WHY DOESN'T pooling "1 { type(ID, mono;poly) } 1	:-	node(ID)." behave as in gringo3 ??
-type(ID, mono)											:-	node(ID), depth(ID, Depth), Depth >= max_depth. 			
+1 { type(ID, Type) : nodeType(Type) } 1	:-	node(ID), depth(ID, Depth), Depth < max_depth. 	% TODO: WHY DOESN'T pooling "1 { type(ID, mono;poly) } 1	:-	node(ID)." behave as in gringo3 ??
+type(ID, mono)							:-	node(ID), depth(ID, Depth), Depth >= max_depth. 			
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%% POLY NODES  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-1 {node_oper(ID, Op) : operator(Op) } 1 				:-	type(ID, poly) .										% poly nodes have a single operator...
-1 { num_children(ID, Terms) : term_num(Terms) } 1 		:-	type(ID, poly), not node_oper(ID, div).					% ..and some number of children 
-num_children(ID, 2) 									:-	type(ID, poly), node_oper(ID, div).						% divison operators have exactly two children
+1 {nodeOper(ID, Op) : operator(Op) } 1 				:-	type(ID, poly) .										% poly nodes have a single operator...
+1 { numChildren(ID, Terms) : termNum(Terms) } 1 	:-	type(ID, poly), not nodeOper(ID, div).					% ..and some number of children 
+numChildren(ID, 2) 									:-	type(ID, poly), nodeOper(ID, div).						% divison operators have exactly two children
 
 % generate parent relationship.
-1 { parentOf(ID, ID*max_terms + IDNum) } 1				:- 	num_children(ID, Num), IDNum = 1..Num. 
+1 { parentOf(ID, ID*max_terms + IDNum) } 1			:- 	numChildren(ID, Num), IDNum = 1..Num. 
 
 % generate child node
 node(ID) 				:- parentOf(PID, ID).
@@ -56,8 +56,8 @@ depth(ChildID, Depth+1)	:-	parentOf(ParentID, ChildID), depth(ParentID, Depth).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%% MONOMIALS %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % monomial nodes have coefficients and a degree
-1 { node_coef(ID, Coeff) : coeff_value(Coeff) } 1		:-	type(ID, mono).
-1 { node_deg(ID, Degree) : degree(Degree) } 1			:-	type(ID, mono).
+1 { nodeCoef(ID, Coeff) : coeffValue(Coeff) } 1		:-	type(ID, mono).
+1 { nodeDeg(ID, Degree) : degree(Degree) } 1		:-	type(ID, mono).
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%% CONSTRAINTS %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

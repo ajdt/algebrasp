@@ -34,13 +34,13 @@ def formEqnString(predicates_list):
 			functor, arg1, arg2 = matching.groups()
 			if functor == 'type':
 				types[arg1] = arg2
-			elif functor == 'node_oper':
+			elif functor == 'nodeOper':
 				operator[ arg1 ] = arg2
 			elif functor == 'parentOf':
 				children[ arg1 ].append( arg2 )
-			elif functor == 'node_deg':
+			elif functor == 'nodeDeg':
 				degree[arg1 ]  = arg2
-			elif functor == 'node_coef':
+			elif functor == 'nodeCoef':
 				coef[arg1] = arg2
 	left	= formPolyString(types, operator,mono, degree, coef, children, '0')
 	right	= formPolyString(types, operator,mono, degree, coef, children, '1')

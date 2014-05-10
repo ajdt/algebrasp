@@ -11,13 +11,13 @@ step(0..max_steps).
 % all of the facts created by eqn_generator initially hold 
 initially(N, node(N))				:-	node(N).
 initially(ID, type(T))				:-	type(ID,T).
-initially(ID, node_oper(Op))		:-	node_oper(ID,Op).
-initially(ID, num_children(Num))	:-	num_children(ID,Num).
+initially(ID, nodeOper(Op))			:-	nodeOper(ID,Op).
+initially(ID, numChildren(Num))		:-	numChildren(ID,Num).
 initially(PID, parentOf(CID))		:-	parentOf(PID, CID).
 initially(ID, side(S))				:-	side(ID, S).
 initially(ID, depth(D))				:-	depth(ID, D).
-initially(ID, node_coef(C))			:-	node_coef(ID, C).
-initially(ID, node_deg(D))			:-	node_deg(ID, D).
+initially(ID, nodeCoef(C))			:-	nodeCoef(ID, C).
+initially(ID, nodeDeg(D))			:-	nodeDeg(ID, D).
 
 
 % all initial facts hold at step zero
@@ -42,15 +42,15 @@ holds(ID, Fact, S+1)	:-	assigned(ID, Fact, S), step(S+1). % new fact that is gen
 % rule: a*x^b + c*x^b ==> (a+c)*x^b
 possible(action(addCommonTerms(N1, C1, C2, Coef1+Coef2), addCommTerms), S) 	:- 	holds(N1, node(N1), S), 
 											holds(N1, type(poly), S),
-											holds(N1, node_oper(add), S),
+											holds(N1, nodeOper(add), S),
 											holds(N1, parentOf(C1), S),
 											holds(N1, parentOf(C2), S),
 											holds(C1, type(mono), S),
 											holds(C2, type(mono), S),
-											holds(C1, node_deg(Deg), S),
-											holds(C2, node_deg(Deg), S),
-											holds(C1, node_coef(Coef1), S),
-											holds(C2, node_coef(Coef2), S),
+											holds(C1, nodeDeg(Deg), S),
+											holds(C2, nodeDeg(Deg), S),
+											holds(C1, nodeCoef(Coef1), S),
+											holds(C2, nodeCoef(Coef2), S),
 											Coef1 != 0,% remove
 											Coef2 != 0,% remove
 											C1 != C2.
@@ -73,32 +73,32 @@ action(Name) :- do_action(action(X,Name), S).
 %--------------------------------------------------------------------------------
 % 						CASE 1: parent node has more than 2 children
 % add the two nodes together
-assigned(C1, node_coef(Sum), S) :-	do_action(action(addCommonTerms(N1, C1, C2, Sum), addCommTerms), S),
-												holds(N1, num_children(Kids), S), Kids > 2.
+assigned(C1, nodeCoef(Sum), S) 			:-	do_action(action(addCommonTerms(N1, C1, C2, Sum), addCommTerms), S),
+											holds(N1, numChildren(Kids), S), Kids > 2.
 % decrement number of children
-assigned(N1, num_children(Kids - 1), S) 	:-	do_action(action(addCommonTerms(N1, C1, C2)), S),
-												holds(N1, num_children(Kids), S), Kids > 2.
+assigned(N1, numChildren(Kids - 1), S) 	:-	do_action(action(addCommonTerms(N1, C1, C2)), S),
+											holds(N1, numChildren(Kids), S), Kids > 2.
 
 
 % 						CASE 2: parent node has exactly 2 children
 % 								so parent node becomes monomial.
 % remove old facts about parent
 removed(N1, Fact, S) 				:- 	do_action(action(addCommonTerms(N1, C1, C2)), S),
-										holds(N1, num_children(Kids), S), Kids == 2,
+										holds(N1, numChildren(Kids), S), Kids == 2,
 										holds(C2, Fact, S).
 % parent ID is still a node, becomes a monomial, and gains node parameters
 assigned(N1, node(N1), S) 			:-	do_action(action(addCommonTerms(N1, C1, C2, Sum), addCommTerms), S),
-										holds(N1, num_children(Kids), S), Kids == 2.
+										holds(N1, numChildren(Kids), S), Kids == 2.
 assigned(N1, type(mono), S) 		:-	do_action(action(addCommonTerms(N1, C1, C2, Sum), addCommTerms), S),
-										holds(N1, num_children(Kids), S), Kids == 2.
-assigned(N1, node_coef(Sum), S) 	:-	do_action(action(addCommonTerms(N1, C1, C2, Sum), addCommTerms), S),
-										holds(N1, num_children(Kids), S), Kids == 2.
-assigned(N1, node_deg(Degree), S) 	:-	do_action(action(addCommonTerms(N1, C1, C2, Sum), addCommTerms), S),
-										holds(N1, num_children(Kids), S), Kids == 2,
-										holds(C1, node_deg(Degree), S) .
+										holds(N1, numChildren(Kids), S), Kids == 2.
+assigned(N1, nodeCoef(Sum), S) 		:-	do_action(action(addCommonTerms(N1, C1, C2, Sum), addCommTerms), S),
+										holds(N1, numChildren(Kids), S), Kids == 2.
+assigned(N1, nodeDeg(Degree), S) 	:-	do_action(action(addCommonTerms(N1, C1, C2, Sum), addCommTerms), S),
+										holds(N1, numChildren(Kids), S), Kids == 2,
+										holds(C1, nodeDeg(Degree), S) .
 % C1 child node is deleted 
 removed(C1, Fact, S)				:-	do_action(action(addCommonTerms(N1, C1, C2)), S),
-										holds(N1, num_children(Kids), S), Kids == 2,
+										holds(N1, numChildren(Kids), S), Kids == 2,
 										holds(C1, Fact, S).
 
 %						BOTH CASES
@@ -110,15 +110,15 @@ removed(C2, Fact, S)	:-	do_action(action(addCommonTerms(N1, C1, C2)), S),
 
 
 % TODO: remove this is just for testing:
-_node(N)              :-	node(N).              
-_type(ID,T)           :-	type(ID,T).           
-_node_oper(ID,Op)     :-	node_oper(ID,Op).     
-_num_children(ID,Num) :-	num_children(ID,Num). 
-_parentOf(PID, CID)   :-	parentOf(PID, CID).   
-_side(ID, S)          :-	side(ID, S).          
-_depth(ID, D)         :-	depth(ID, D).         
-_node_coef(ID, C)     :-	node_coef(ID, C).     
-_node_deg(ID, D)      :-	node_deg(ID, D).      
+_node(N)              	:-	node(N).              
+_type(ID,T)           	:-	type(ID,T).           
+_nodeOper(ID,Op)		:-	nodeOper(ID,Op).     
+_numChildren(ID,Num) 	:-	numChildren(ID,Num). 
+_parentOf(PID, CID)   	:-	parentOf(PID, CID).   
+_side(ID, S)          	:-	side(ID, S).          
+_depth(ID, D)         	:-	depth(ID, D).         
+_nodeCoef(ID, C)     	:-	nodeCoef(ID, C).     
+_nodeDeg(ID, D)      	:-	nodeDeg(ID, D).      
 
 
 %#show holds/2.
@@ -126,10 +126,10 @@ _node_deg(ID, D)      :-	node_deg(ID, D).
 #show action/1.
 #show _node/1.
 #show _type/2.
-#show _node_oper/2.
-#show _num_children/2.
+#show _nodeOper/2.
+#show _numChildren/2.
 #show _parentOf/2.
 #show _side/2.
 #show _depth/2.
-#show _node_coef/2.
-#show _node_deg/2.
+#show _nodeCoef/2.
+#show _nodeDeg/2.
