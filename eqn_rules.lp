@@ -12,14 +12,11 @@
 % addCommonTerms: a*x^b + c*x^b ----> (a+c)*x^b, 2 Cases
 %================================================================================
 % 						### RULE CONDITIONS ###
-% TODO: refactor action data from actions!
 % there's an add poly node with two children that are monomials of the same degree
-possible(action(addCommonTerms(N1, C1, C2, Coef1+Coef2), addCommTerms), S) 	:- 	holds(N1, type(poly), S),
-											holds(N1, nodeOper(add), S),
+% XXX: this no longer checks the types of  N1, C1, and C2. It's implicit because nodeCoef, nodeDeg, etc... predicates hold
+possible(action(data(N1, C1, C2, Coef1+Coef2), addCommTerms), S) 	:- 	holds(N1, nodeOper(add), S),
 											holds(N1, parentOf(C1), S),
 											holds(N1, parentOf(C2), S),
-											holds(C1, type(mono), S),
-											holds(C2, type(mono), S),
 											holds(C1, nodeDeg(Deg), S),
 											holds(C2, nodeDeg(Deg), S),
 											holds(C1, nodeCoef(Coef1), S),
@@ -30,10 +27,10 @@ possible(action(addCommonTerms(N1, C1, C2, Coef1+Coef2), addCommTerms), S) 	:- 	
 % 						### APPLYING THE RULE ###
 % 						### CASE 1: parent node has more than 2 children ###
 % add the two nodes together
-assigned(C1, nodeCoef(Sum), S) 			:-	do_action(action(addCommonTerms(N1, C1, C2, Sum), addCommTerms), S),
+assigned(C1, nodeCoef(Sum), S) 			:-	do_action(action(data(N1, C1, C2, Sum), addCommTerms), S),
 											holds(N1, numChildren(Kids), S), Kids > 2.
 % decrement number of children
-assigned(N1, numChildren(Kids - 1), S) 	:-	do_action(action(addCommonTerms(N1, C1, C2)), S),
+assigned(N1, numChildren(Kids - 1), S) 	:-	do_action(action(data(N1, C1, C2, Sum), addCommTerms), S),
 											holds(N1, numChildren(Kids), S), Kids > 2.
 
 
@@ -41,28 +38,28 @@ assigned(N1, numChildren(Kids - 1), S) 	:-	do_action(action(addCommonTerms(N1, C
 %--------------------------------------------------------------------------------
 % 								so parent node becomes monomial.
 % remove old facts about parent
-removed(N1, Fact, S) 				:- 	do_action(action(addCommonTerms(N1, C1, C2)), S),
+removed(N1, Fact, S) 				:-	do_action(action(data(N1, C1, C2, Sum), addCommTerms), S),
 										holds(N1, numChildren(Kids), S), Kids == 2,
 										holds(C2, Fact, S).
 % parent ID is still a node, becomes a monomial, and gains node parameters
-assigned(N1, node(N1), S) 			:-	do_action(action(addCommonTerms(N1, C1, C2, Sum), addCommTerms), S),
+assigned(N1, node(N1), S) 			:-	do_action(action(data(N1, C1, C2, Sum), addCommTerms), S),
 										holds(N1, numChildren(Kids), S), Kids == 2.
-assigned(N1, type(mono), S) 		:-	do_action(action(addCommonTerms(N1, C1, C2, Sum), addCommTerms), S),
+assigned(N1, type(mono), S) 		:-	do_action(action(data(N1, C1, C2, Sum), addCommTerms), S),
 										holds(N1, numChildren(Kids), S), Kids == 2.
-assigned(N1, nodeCoef(Sum), S) 		:-	do_action(action(addCommonTerms(N1, C1, C2, Sum), addCommTerms), S),
+assigned(N1, nodeCoef(Sum), S) 		:-	do_action(action(data(N1, C1, C2, Sum), addCommTerms), S),
 										holds(N1, numChildren(Kids), S), Kids == 2.
-assigned(N1, nodeDeg(Degree), S) 	:-	do_action(action(addCommonTerms(N1, C1, C2, Sum), addCommTerms), S),
+assigned(N1, nodeDeg(Degree), S) 	:-	do_action(action(data(N1, C1, C2, Sum), addCommTerms), S),
 										holds(N1, numChildren(Kids), S), Kids == 2,
 										holds(C1, nodeDeg(Degree), S) .
 % C1 child node is deleted 
-removed(C1, Fact, S)				:-	do_action(action(addCommonTerms(N1, C1, C2)), S),
+removed(C1, Fact, S)				:-	do_action(action(data(N1, C1, C2, Sum), addCommTerms), S),
 										holds(N1, numChildren(Kids), S), Kids == 2,
 										holds(C1, Fact, S).
 
 %						### BOTH CASES ###
 %--------------------------------------------------------------------------------
 % completely erase second node											
-removed(C2, Fact, S)	:-	do_action(action(addCommonTerms(N1, C1, C2)), S),
+removed(C2, Fact, S)	:-	do_action(action(data(N1, C1, C2, Sum), addCommTerms), S),
 							holds(C2, Fact, S).
 %================================================================================
 %================================================================================
