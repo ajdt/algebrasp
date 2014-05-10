@@ -51,8 +51,8 @@ def addPredicateEntry(types, operator,mono, degree, coef, children, functor, arg
 
 # form the full equation string given dictionaries with data
 def eqnString(types, operator,mono, degree, coef, children):
-	left	= formPolyString(types, operator,mono, degree, coef, children, '0')
-	right	= formPolyString(types, operator,mono, degree, coef, children, '1')
+	left	= formPolyString(types, operator,mono, degree, coef, children, '1')
+	right	= formPolyString(types, operator,mono, degree, coef, children, '2')
 	return  left[1:-1] + '=' + right[1:-1]	# NOTE: slicing to avoid outermost parens
 
 def formPolyString(types, operator,mono, degree, coef, children, root):

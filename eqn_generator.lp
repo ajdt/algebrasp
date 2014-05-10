@@ -27,8 +27,8 @@ operator(add;mul;div).
 nodeType(poly;mono).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%% ROOT NODES  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-root(0, left).			% hardcoded left and right roots
-root(1, right).
+root(1, left).			% hardcoded left and right roots
+root(2, right).
 side(ID, S)		:- root(ID,S).
 node(ID) 		:- root(ID,S).
 depth(ID,0)		:- root(ID,S). 		% every root starts at depth zero
