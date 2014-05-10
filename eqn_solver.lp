@@ -28,6 +28,11 @@ holds(ID, Fact, 0)		:-	initially(ID, Fact).
 holds(ID, Fact, S+1)	:-	holds(ID, Fact, S), not removed(ID, Fact, S), step(S+1).
 holds(ID, Fact, S+1)	:-	assigned(ID, Fact, S), step(S+1). % new fact that is generated
 
+% if N1 inherits the properties of C1, at step S then add these new properties and remove the old ones
+% NOTE: DOES NOT remove C1
+assigned(N1, Fact, S)	:- inheritFrom(N1, C1, S), holds(C1, Fact, S).
+removed(N1, Fact, S)	:- inheritFrom(N1, C1, S), holds(N1, Fact, S).
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%% RULE SELECTION %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % possible actions:
 %	each possible action is valid at a particular point in time

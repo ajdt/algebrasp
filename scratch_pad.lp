@@ -26,21 +26,10 @@ assigned(N1, numChildren(Kids - 1), S) 	:-	do_action(action(data(N1, C1, C2), ad
 
 % 						### CASE 2: parent node has exactly 2 children ###
 %--------------------------------------------------------------------------------
-% 								so parent node becomes monomial.
-% remove old facts about parent
-removed(N1, Fact, S) 				:-	do_action(action(data(N1, C1, C2), addIdent), S),
-										holds(N1, numChildren(Kids), S), Kids == 2,
-										holds(C2, Fact, S).
-% parent ID is still a node, becomes a monomial, and gains node parameters
-% TODO: create concept of replacing parent data with child data, make code less redundant!
-assigned(N1, type(mono), S) 		:-	do_action(action(data(N1, C1, C2), addIdent), S),
+
+% parent inherits C1 child's properities
+inheritFrom(N1, C1, S) :-	do_action(action(data(N1, C1, C2), addIdent), S), 
 										holds(N1, numChildren(Kids), S), Kids == 2.
-assigned(N1, nodeCoef(Coef), S) 	:-	do_action(action(data(N1, C1, C2), addIdent), S),
-										holds(N1, numChildren(Kids), S), Kids == 2,
-										holds(C1, nodeCoef(Coef),  S).
-assigned(N1, nodeDeg(Degree), S) 	:-	do_action(action(data(N1, C1, C2), addIdent), S),
-										holds(N1, numChildren(Kids), S), Kids == 2,
-										holds(C1, nodeDeg(Degree), S) .
 % C1 child node is deleted 
 removed(C1, Fact, S)				:-	do_action(action(data(N1, C1, C2), addIdent), S),
 										holds(N1, numChildren(Kids), S), Kids == 2,

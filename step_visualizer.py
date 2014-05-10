@@ -43,7 +43,7 @@ def formEqnStepString(predicates_list):
 	every_step = []
 	# for every step, lookup
 	for step in sorted(all_steps):
-		every_step.append(str(step) + ':' + eqnString(types[step], operator[step], mono[step], degree[step], coef[step], children[step]))
+		every_step.append(str(step) + ':\t' + eqnString(types[step], operator[step], mono[step], degree[step], coef[step], children[step]))
 
 	return '\n'.join(every_step)
 
