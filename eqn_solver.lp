@@ -10,7 +10,6 @@ step(0..max_steps).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%% EQN STATES AT GIVEN STEP %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % all of the facts created by eqn_generator initially hold 
-initially(N, node(N))				:-	node(N).
 initially(ID, type(T))				:-	type(ID,T).
 initially(ID, nodeOper(Op))			:-	nodeOper(ID,Op).
 initially(ID, numChildren(Num))		:-	numChildren(ID,Num).
@@ -69,7 +68,6 @@ _nodeDeg(ID, D)      	:-	nodeDeg(ID, D).
 
 
 % TODO: remove. Used by eqn visualizer
-_node(ID, S)            	:-	holds(ID, node(N), S).			
 _type(ID,T, S)				:-	holds(ID, type(T), S).			
 _nodeOper(ID,Op, S)			:-	holds(ID, nodeOper(Op), S).		
 _numChildren(ID,Num, S)		:-	holds(ID, numChildren(Num), S).	
@@ -93,7 +91,6 @@ _nodeDeg(ID, D, S)			:-	holds(ID, nodeDeg(D), S).
 #show _nodeDeg/2.
 
 % used for eqn solver steps
-#show _node/2.
 #show _type/3.
 #show _nodeOper/3.
 #show _numChildren/3.

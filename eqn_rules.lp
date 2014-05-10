@@ -14,8 +14,7 @@
 % 						### RULE CONDITIONS ###
 % TODO: refactor action data from actions!
 % there's an add poly node with two children that are monomials of the same degree
-possible(action(addCommonTerms(N1, C1, C2, Coef1+Coef2), addCommTerms), S) 	:- 	holds(N1, node(N1), S), 
-											holds(N1, type(poly), S),
+possible(action(addCommonTerms(N1, C1, C2, Coef1+Coef2), addCommTerms), S) 	:- 	holds(N1, type(poly), S),
 											holds(N1, nodeOper(add), S),
 											holds(N1, parentOf(C1), S),
 											holds(N1, parentOf(C2), S),

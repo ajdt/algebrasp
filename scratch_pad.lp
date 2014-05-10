@@ -7,8 +7,7 @@
 % TODO: refactor action data from actions!
 % there's an add poly node with two children that are monomials, one of them has coef == 0 
 % the only info we remember is the identity of the parent node and the node to remove
-possible(action(data(N1, C1, C2), addIdent), S) 	:- 	holds(N1, node(N1), S), 
-											holds(N1, type(poly), S),
+possible(action(data(N1, C1, C2), addIdent), S) 	:- 	holds(N1, type(poly), S),
 											holds(N1, nodeOper(add), S),
 											holds(N1, parentOf(C1), S),
 											holds(N1, parentOf(C2), S),
@@ -34,8 +33,6 @@ removed(N1, Fact, S) 				:-	do_action(action(data(N1, C1, C2), addIdent), S),
 										holds(C2, Fact, S).
 % parent ID is still a node, becomes a monomial, and gains node parameters
 % TODO: create concept of replacing parent data with child data, make code less redundant!
-assigned(N1, node(N1), S) 			:-	do_action(action(data(N1, C1, C2), addIdent), S),
-										holds(N1, numChildren(Kids), S), Kids == 2.
 assigned(N1, type(mono), S) 		:-	do_action(action(data(N1, C1, C2), addIdent), S),
 										holds(N1, numChildren(Kids), S), Kids == 2.
 assigned(N1, nodeCoef(Coef), S) 	:-	do_action(action(data(N1, C1, C2), addIdent), S),
