@@ -24,24 +24,33 @@ two_term = re.compile("(\w+)\(([-\d\w]+),([-\d\w]+)\)")
 op_symbols  = { 'div':'/', 'mul':'*', 'add':'+'}
 
 def formEqnString(predicates_list):
-	types, operator = {}, {} 		# key is node id in all cases
-	mono , degree , coef = {}, {}, {} 
-	children = defaultdict(list)
+	# one dictionary per predicate type
+	types, operator			= {}, {} 		# key is node id in all cases
+	mono, degree, coef 		= {}, {}, {} 
+	children 				= defaultdict(list)
 
 	for predicate in predicates_list:
 		matching = two_term.match(predicate)
 		if matching:
 			functor, arg1, arg2 = matching.groups()
-			if functor == 'type':
-				types[arg1] = arg2
-			elif functor == 'nodeOper':
-				operator[ arg1 ] = arg2
-			elif functor == 'parentOf':
-				children[ arg1 ].append( arg2 )
-			elif functor == 'nodeDeg':
-				degree[arg1 ]  = arg2
-			elif functor == 'nodeCoef':
-				coef[arg1] = arg2
+			addPredicateEntry(types, operator,mono, degree, coef, children, functor, arg1, arg2) ## Ugly, Ugly code, but ehh, it gets the job done :)
+	return eqnString(types, operator,mono, degree, coef, children)
+
+# add a given entry to coresponding dictionary
+def addPredicateEntry(types, operator,mono, degree, coef, children, functor, arg1, arg2):
+	if functor == 'type':
+		types[arg1] = arg2
+	elif functor == 'nodeOper':
+		operator[ arg1 ] = arg2
+	elif functor == 'parentOf':
+		children[ arg1 ].append( arg2 )
+	elif functor == 'nodeDeg':
+		degree[arg1 ]  = arg2
+	elif functor == 'nodeCoef':
+		coef[arg1] = arg2
+
+# form the full equation string given dictionaries with data
+def eqnString(types, operator,mono, degree, coef, children):
 	left	= formPolyString(types, operator,mono, degree, coef, children, '0')
 	right	= formPolyString(types, operator,mono, degree, coef, children, '1')
 	return  left[1:-1] + '=' + right[1:-1]	# NOTE: slicing to avoid outermost parens
