@@ -8,6 +8,15 @@
 %
 % XXX: these rules no longer check the types of  N1, C1, and C2. Types are implicit depending on nodeDeg, nodeOper, etc... predicates that hold
 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% USEFUL CONSTANTS %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Constant one.
+% NOTE: to set a node to 1, just have it "inheritFrom" this node, and set depth/side manually
+node(one).
+type(one, mono).
+nodeCoef(one,1). 
+nodeDeg(one,0).  
+
 %================================================================================
 % addCommonTerms: a*x^b + c*x^b ----> (a+c)*x^b, 2 Cases
 %================================================================================
@@ -104,3 +113,34 @@ removed(C2, Fact, S)	:-	_selected(action(data(N1, C1, C2), addIdent), S),
 %================================================================================
 %================================================================================
 
+%================================================================================
+% divideInverse: a*x^b / a*x^b ----> 1
+%================================================================================
+% 						### RULE CONDITIONS ###
+% There's a div node with two children that are equal
+possible(action(data(N1, C1, C2), divInverse), S) 	:- 	holds(N1, nodeOper(div), S),
+											holds(N1, parentOf(C1), S),
+											holds(N1, parentOf(C2), S),
+											holds(C1, nodeCoef(Coef), S),
+											holds(C2, nodeCoef(Coef), S),
+											holds(C1, nodeDeg(Deg), S),
+											holds(C2, nodeDeg(Deg), S),
+											C1 != C2.
+
+% 						### APPLYING THE RULE ###
+%--------------------------------------------------------------------------------
+
+% parent becomes monomial with value 1, we must manually set the side and depth values
+inheritFrom(N1, one, S) 		:-	_selected(action(data(N1, C1, C2), divInverse), S). 
+assigned(N1, depth(Depth), S)	:-	_selected(action(data(N1, C1, C2), divInverse), S),
+									holds(N1, depth(Depth), S).
+assigned(N1, side(Side), S) 	:-	_selected(action(data(N1, C1, C2), divInverse), S),
+									holds(N1, side(Side), S).
+
+% completely erase both children
+removed(C1, Fact, S)			:-	_selected(action(data(N1, C1, C2), divInverse), S),
+									holds(C1, Fact, S).
+removed(C2, Fact, S)			:-	_selected(action(data(N1, C1, C2), divInverse), S),
+									holds(C2, Fact, S).
+%================================================================================
+%================================================================================
