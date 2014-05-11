@@ -5,15 +5,14 @@
 %
 % each rule's section contains both the condtions for the rule to fire,
 % and the actions to perform if the rule is fired.
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% SOLVER RULES %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+% XXX: these rules no longer check the types of  N1, C1, and C2. Types are implicit depending on nodeDeg, nodeOper, etc... predicates that hold
 
 %================================================================================
 % addCommonTerms: a*x^b + c*x^b ----> (a+c)*x^b, 2 Cases
 %================================================================================
 % 						### RULE CONDITIONS ###
 % there's an add poly node with two children that are monomials of the same degree
-% XXX: this no longer checks the types of  N1, C1, and C2. It's implicit because nodeCoef, nodeDeg, etc... predicates hold
 possible(action(data(N1, C1, C2, Coef1+Coef2), addCommTerms), S) 	:- 	holds(N1, nodeOper(add), S),
 											holds(N1, parentOf(C1), S),
 											holds(N1, parentOf(C2), S),
@@ -37,6 +36,7 @@ assigned(N1, numChildren(Kids - 1), S) 	:-	_selected(action(data(N1, C1, C2, Sum
 % 						### CASE 2: parent node has exactly 2 children ###
 %--------------------------------------------------------------------------------
 % 								so parent node becomes monomial.
+% TODO: cannot use inheritFrom here b/c coefficient isn't directly inherited. 
 % remove old facts about parent
 removed(N1, Fact, S) 				:-	_selected(action(data(N1, C1, C2, Sum), addCommTerms), S),
 										holds(N1, numChildren(Kids), S), Kids == 2,
@@ -60,6 +60,46 @@ removed(C1, Fact, S)				:-	_selected(action(data(N1, C1, C2, Sum), addCommTerms)
 %--------------------------------------------------------------------------------
 % completely erase second node											
 removed(C2, Fact, S)	:-	_selected(action(data(N1, C1, C2, Sum), addCommTerms), S),
+							holds(C2, Fact, S).
+%================================================================================
+%================================================================================
+
+
+%================================================================================
+% addIdentity: a*x^b + 0 ----> a*x^b 
+%================================================================================
+% 						### RULE CONDITIONS ###
+% TODO: refactor action data from actions!
+% there's an add poly node with two children that are monomials, one of them has coef == 0 
+% the only info we remember is the identity of the parent node and the node to remove
+possible(action(data(N1, C1, C2), addIdent), S) 	:- 	holds(N1, nodeOper(add), S),
+											holds(N1, parentOf(C1), S),
+											holds(N1, parentOf(C2), S),
+											holds(C1, nodeCoef(Coef1), S),
+											holds(C2, nodeCoef(0), S),
+											C1 != C2.
+% 						### APPLYING THE RULE ###
+% 						### CASE 1: parent node has more than 2 children ###
+% decrement number of children
+assigned(N1, numChildren(Kids - 1), S) 	:-	_selected(action(data(N1, C1, C2), addIdent), S),
+											holds(N1, numChildren(Kids), S), Kids > 2.
+
+
+% 						### CASE 2: parent node has exactly 2 children ###
+%--------------------------------------------------------------------------------
+
+% parent inherits C1 child's properities
+inheritFrom(N1, C1, S) :-	_selected(action(data(N1, C1, C2), addIdent), S), 
+										holds(N1, numChildren(Kids), S), Kids == 2.
+% C1 child node is deleted 
+removed(C1, Fact, S)				:-	_selected(action(data(N1, C1, C2), addIdent), S),
+										holds(N1, numChildren(Kids), S), Kids == 2,
+										holds(C1, Fact, S).
+
+%						### BOTH CASES ###
+%--------------------------------------------------------------------------------
+% completely erase second node											
+removed(C2, Fact, S)	:-	_selected(action(data(N1, C1, C2), addIdent), S),
 							holds(C2, Fact, S).
 %================================================================================
 %================================================================================
