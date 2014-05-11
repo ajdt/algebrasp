@@ -1,0 +1,4 @@
+# compiled files
+*.pyc
+*.sh
+throwaway_code/*
