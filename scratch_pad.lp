@@ -1,44 +1,56 @@
+% two cases, there are more than two kids or there are exactly two kids
+% each operator node is generated with at least two children, so no operator
+% should ever have one child.
+
+% TODO: try to make this code more concise Too!!!
+delete(ToRemove, S) :- shrinkSubtree(Parent, ToRemove, S).
+							
+% if have more than two kids, then just decrement num kids
+removed(Parent, numChildren(Kids), S)		:-	shrinkSubtree(Parent, ToRemove, S),
+												holds(Parent, numChildren(Kids), S),
+												Kids > 2.
+
+assigned(Parent, numChildren(Kids - 1), S)	:-	shrinkSubtree(Parent, ToRemove, S),
+												holds(Parent, numChildren(Kids), S),
+												Kids > 2.
+
+% if exactly two kids, then inherit from last remaining child...
+inheritFrom(Parent, SecondKid, S)			:-	shrinkSubtree(Parent, ToRemove, S),
+												holds(Parent, numChildren(2), S),
+												holds(Parent, parentOf(SecondKid), S),
+												SecondKid != ToRemove.
+% ...and delete the last remaining child
+delete(SecondKid, S)			:-	shrinkSubtree(Parent, ToRemove, S),
+									holds(Parent, numChildren(2), S),
+									holds(Parent, parentOf(SecondKid), S),
+									SecondKid != ToRemove.
+% abstracted notion of deleting a node
+removed(ToDelete, Fact, S)		:-	delete(ToDelete, S),
+									holds(ToDelete, Fact, S) .
+
 % this is where I'll be testing new rules to add to the solver
 
 %================================================================================
-% addIdentity: a*x^b + 0 ----> a*x^b 
+% fracCancel: A*C/(B*C) --> A/B
 %================================================================================
 % 						### RULE CONDITIONS ###
-% TODO: refactor action data from actions!
-% there's an add poly node with two children that are monomials, one of them has coef == 0 
-% the only info we remember is the identity of the parent node and the node to remove
-possible(action(data(N1, C1, C2), addIdent), S) 	:- 	holds(N1, type(poly), S),
-											holds(N1, nodeOper(add), S),
-											holds(N1, parentOf(C1), S),
-											holds(N1, parentOf(C2), S),
-											holds(C1, type(mono), S), 
-											% TODO: can we ignore types and just assume that only monomials have coefs and only parent types hyave children?
-											holds(C2, type(mono), S),
-											holds(C1, nodeCoef(Coef1), S),
-											holds(C2, nodeCoef(0), S),
-											C1 != C2.
+% There's a div node with two mult nodes as children. The mult nodes have children that are equal
+possible(action(data(Numer, Top, Denom, Bottom), fracCancel), S) 	:- 	holds(N1, nodeOper(div), S),
+											holds(N1, parentOf(Denom), S),
+											holds(N1, parentOf(Numer), S),
+											Denom != Numer,
+											holds(Denom, nodeOper(mul), S),
+											holds(Numer, nodeOper(mul), S),
+											holds(Numer, parentOf(Top), S),
+											holds(Denom, parentOf(Bottom), S),
+											holds(Top, nodeCoef(Coef), S),			% top and bottom are equal
+											holds(Top, nodeDeg(Deg), S),
+											holds(Bottom, nodeCoef(Coef), S),
+											holds(Bottom, nodeDeg(Deg), S).
+
 % 						### APPLYING THE RULE ###
-% 						### CASE 1: parent node has more than 2 children ###
 % decrement number of children
-assigned(N1, numChildren(Kids - 1), S) 	:-	_selected(action(data(N1, C1, C2), addIdent), S),
-											holds(N1, numChildren(Kids), S), Kids > 2.
-
-
-% 						### CASE 2: parent node has exactly 2 children ###
-%--------------------------------------------------------------------------------
-
-% parent inherits C1 child's properities
-inheritFrom(N1, C1, S) :-	_selected(action(data(N1, C1, C2), addIdent), S), 
-										holds(N1, numChildren(Kids), S), Kids == 2.
-% C1 child node is deleted 
-removed(C1, Fact, S)				:-	_selected(action(data(N1, C1, C2), addIdent), S),
-										holds(N1, numChildren(Kids), S), Kids == 2,
-										holds(C1, Fact, S).
-
-%						### BOTH CASES ###
-%--------------------------------------------------------------------------------
-% completely erase second node											
-removed(C2, Fact, S)	:-	_selected(action(data(N1, C1, C2), addIdent), S),
-							holds(C2, Fact, S).
+shrinkSubtree(Numer, Top, S) 		:-	_selected(action(data(Numer, Top, Denom, Bottom), fracCancel), S).
+shrinkSubtree(Denom, Bottom, S) 	:-	_selected(action(data(Numer, Top, Denom, Bottom), fracCancel), S).
 %================================================================================
 %================================================================================
