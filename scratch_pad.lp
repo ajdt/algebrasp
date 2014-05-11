@@ -2,6 +2,12 @@
 % each operator node is generated with at least two children, so no operator
 % should ever have one child.
 
+
+
+% abstracted notion of deleting a node
+removed(ToDelete, Fact, S)		:-	delete(ToDelete, S),
+									holds(ToDelete, Fact, S) .
+
 % TODO: try to make this code more concise Too!!!
 delete(ToRemove, S) :- shrinkSubtree(Parent, ToRemove, S).
 							
@@ -15,18 +21,13 @@ assigned(Parent, numChildren(Kids - 1), S)	:-	shrinkSubtree(Parent, ToRemove, S)
 												Kids > 2.
 
 % if exactly two kids, then inherit from last remaining child...
-inheritFrom(Parent, SecondKid, S)			:-	shrinkSubtree(Parent, ToRemove, S),
+inheritFromAndDelete(Parent, SecondKid, S)	:-	shrinkSubtree(Parent, ToRemove, S),
 												holds(Parent, numChildren(2), S),
 												holds(Parent, parentOf(SecondKid), S),
 												SecondKid != ToRemove.
-% ...and delete the last remaining child
-delete(SecondKid, S)			:-	shrinkSubtree(Parent, ToRemove, S),
-									holds(Parent, numChildren(2), S),
-									holds(Parent, parentOf(SecondKid), S),
-									SecondKid != ToRemove.
-% abstracted notion of deleting a node
-removed(ToDelete, Fact, S)		:-	delete(ToDelete, S),
-									holds(ToDelete, Fact, S) .
+
+inheritFrom(Parent, SecondKid, S)			:- inheritFromAndDelete(Parent, SecondKid, S).
+delete(SecondKid, S) 						:- inheritFromAndDelete(Parent, SecondKid, S).
 
 % this is where I'll be testing new rules to add to the solver
 
