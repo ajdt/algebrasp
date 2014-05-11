@@ -5,33 +5,38 @@
 %
 % NOTE: this file depends on eqn_rule for the rules used to solve an equation!
 
-#const max_steps = 3. % max number of actions until a solution is reached
+#const max_steps = 1. % max number of actions until a solution is reached
 step(0..max_steps). 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%% EQN STATES AT GIVEN STEP %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % all of the facts created by eqn_generator initially hold 
-initially(ID, type(T))				:-	type(ID,T).
-initially(ID, nodeOper(Op))			:-	nodeOper(ID,Op).
-initially(ID, numChildren(Num))		:-	numChildren(ID,Num).
-initially(PID, parentOf(CID))		:-	parentOf(PID, CID).
-initially(ID, side(S))				:-	side(ID, S).
-initially(ID, depth(D))				:-	depth(ID, D).
-initially(ID, nodeCoef(C))			:-	nodeCoef(ID, C).
-initially(ID, nodeDeg(D))			:-	nodeDeg(ID, D).
+initially(ID, field(type, T))				:-	type(ID,T).
+initially(ID, field(nodeOper, Op))			:-	nodeOper(ID,Op).
+initially(ID, field(numChildren, Num))		:-	numChildren(ID,Num).
+initially(PID, field(parentOf, CID))		:-	parentOf(PID, CID).
+initially(ID, field(side, S))				:-	side(ID, S).
+initially(ID, hidden(depth, D))				:-	depth(ID, D). % NOTE: hidden fields are not inherited
+initially(ID, field(nodeCoef, C))			:-	nodeCoef(ID, C).
+initially(ID, field(nodeDeg, D))			:-	nodeDeg(ID, D).
 
 
 % all initial facts hold at step zero
 holds(ID, Fact, 0)		:-	initially(ID, Fact).
 
 
+% Facts can be removed, updated, or assigned at each step, if not, then they carry over from last step.
 % every fact that isn't removed at step S, holds at the next step
 holds(ID, Fact, S+1)	:-	holds(ID, Fact, S), not removed(ID, Fact, S), step(S+1).
 holds(ID, Fact, S+1)	:-	assigned(ID, Fact, S), step(S+1). % new fact that is generated
 
-% if N1 inherits the properties of C1, at step S then add these new properties and remove the old ones
-% NOTE: DOES NOT remove C1
-assigned(N1, Fact, S)	:- inheritFrom(N1, C1, S), holds(C1, Fact, S).
-removed(N1, Fact, S)	:- inheritFrom(N1, C1, S), holds(N1, Fact, S).
+% to update a field means to remove old field and add the new field value
+assigned(ID, Fact, S) :- update(ID, Fact, S).
+removed(ID, field(Name, OrigValue), S)	:- update(ID, field(Name, Value), S), 
+										holds(ID, field(Name, OrigValue), S).
+
+% if N1 inherits the field properties of C1, at step S then add these new properties and remove the old ones
+% NOTE: DOES NOT remove C1, and only field() properties are inherited not hidden() properties
+update(N1, field(Name, Value), S)		:- inheritFrom(N1, C1, S), holds(C1, field(Name, Value), S).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%% RULE SELECTION %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % possible actions:
@@ -76,14 +81,14 @@ _nodeDeg(ID, D)      	:-	nodeDeg(ID, D).
 
 
 % TODO: remove. Used by eqn visualizer
-_type(ID,T, S)				:-	holds(ID, type(T), S).			
-_nodeOper(ID,Op, S)			:-	holds(ID, nodeOper(Op), S).		
-_numChildren(ID,Num, S)		:-	holds(ID, numChildren(Num), S).	
-_parentOf(ID, CID, S)		:-	holds(ID, parentOf(CID), S).	
-_side(ID, S, S)				:-	holds(ID, side(S), S).			
-_depth(ID, D, S)			:-	holds(ID, depth(D), S).			
-_nodeCoef(ID, C, S)			:-	holds(ID, nodeCoef(C), S).		
-_nodeDeg(ID, D, S)			:-	holds(ID, nodeDeg(D), S).		
+_type(ID,T, S)				:-	holds(ID, field(type,T), S).			
+_nodeOper(ID,Op, S)			:-	holds(ID, field(nodeOper,Op), S).		
+_numChildren(ID,Num, S)		:-	holds(ID, field(numChildren,Num), S).	
+_parentOf(ID, CID, S)		:-	holds(ID, field(parentOf,CID), S).	
+_side(ID, S, S)				:-	holds(ID, field(side,S), S).			
+_depth(ID, D, S)			:-	holds(ID, field(depth,D), S).			
+_nodeCoef(ID, C, S)			:-	holds(ID, field(nodeCoef,C), S).		
+_nodeDeg(ID, D, S)			:-	holds(ID, field(nodeDeg,D), S).		
 
 %#show holds/2.
 %#show action/1.

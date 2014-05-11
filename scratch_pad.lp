@@ -12,18 +12,14 @@ removed(ToDelete, Fact, S)		:-	delete(ToDelete, S),
 delete(ToRemove, S) :- shrinkSubtree(Parent, ToRemove, S).
 							
 % if have more than two kids, then just decrement num kids
-removed(Parent, numChildren(Kids), S)		:-	shrinkSubtree(Parent, ToRemove, S),
-												holds(Parent, numChildren(Kids), S),
-												Kids > 2.
-
-assigned(Parent, numChildren(Kids - 1), S)	:-	shrinkSubtree(Parent, ToRemove, S),
-												holds(Parent, numChildren(Kids), S),
-												Kids > 2.
+update(Parent, field(numChildren,Kids - 1), S)	:-	shrinkSubtree(Parent, ToRemove, S),
+													holds(Parent, field(numChildren,Kids), S),
+													Kids > 2.
 
 % if exactly two kids, then inherit from last remaining child...
 inheritFromAndDelete(Parent, SecondKid, S)	:-	shrinkSubtree(Parent, ToRemove, S),
-												holds(Parent, numChildren(2), S),
-												holds(Parent, parentOf(SecondKid), S),
+												holds(Parent, field(numChildren,2), S),
+												holds(Parent, field(parentOf,SecondKid), S),
 												SecondKid != ToRemove.
 
 inheritFrom(Parent, SecondKid, S)			:- inheritFromAndDelete(Parent, SecondKid, S).
@@ -36,18 +32,18 @@ delete(SecondKid, S) 						:- inheritFromAndDelete(Parent, SecondKid, S).
 %================================================================================
 % 						### RULE CONDITIONS ###
 % There's a div node with two mult nodes as children. The mult nodes have children that are equal
-possible(action(data(Numer, Top, Denom, Bottom), fracCancel), S) 	:- 	holds(N1, nodeOper(div), S),
-											holds(N1, parentOf(Denom), S),
-											holds(N1, parentOf(Numer), S),
+possible(action(data(Numer, Top, Denom, Bottom), fracCancel), S) 	:- 	holds(N1, field(nodeOper,div), S),
+											holds(N1, field(parentOf,Denom), S),
+											holds(N1, field(parentOf,Numer), S),
 											Denom != Numer,
-											holds(Denom, nodeOper(mul), S),
-											holds(Numer, nodeOper(mul), S),
-											holds(Numer, parentOf(Top), S),
-											holds(Denom, parentOf(Bottom), S),
-											holds(Top, nodeCoef(Coef), S),			% top and bottom are equal
-											holds(Top, nodeDeg(Deg), S),
-											holds(Bottom, nodeCoef(Coef), S),
-											holds(Bottom, nodeDeg(Deg), S).
+											holds(Denom, field(nodeOper,mul), S),
+											holds(Numer, field(nodeOper,mul), S),
+											holds(Numer, field(parentOf,Top), S),
+											holds(Denom, field(parentOf,Bottom), S),
+											holds(Top, field(nodeCoef,Coef), S),			% top and bottom are equal
+											holds(Top, field(nodeDeg,Deg), S),
+											holds(Bottom, field(nodeCoef,Coef), S),
+											holds(Bottom, field(nodeDeg,Deg), S).
 
 % 						### APPLYING THE RULE ###
 % decrement number of children

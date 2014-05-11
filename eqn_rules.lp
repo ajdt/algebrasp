@@ -22,24 +22,24 @@ nodeDeg(one,0).
 %================================================================================
 % 						### RULE CONDITIONS ###
 % there's an add poly node with two children that are monomials of the same degree
-possible(action(data(N1, C1, C2, Coef1+Coef2), addCommTerms), S) 	:- 	holds(N1, nodeOper(add), S),
-											holds(N1, parentOf(C1), S),
-											holds(N1, parentOf(C2), S),
-											holds(C1, nodeDeg(Deg), S),
-											holds(C2, nodeDeg(Deg), S),
-											holds(C1, nodeCoef(Coef1), S),
-											holds(C2, nodeCoef(Coef2), S),
+possible(action(data(N1, C1, C2, Coef1+Coef2), addCommTerms), S) 	:- 	holds(N1, field(nodeOper,add), S),
+											holds(N1, field(parentOf,C1), S),
+											holds(N1, field(parentOf,C2), S),
+											holds(C1, field(nodeDeg,Deg), S),
+											holds(C2, field(nodeDeg,Deg), S),
+											holds(C1, field(nodeCoef,Coef1), S),
+											holds(C2, field(nodeCoef,Coef2), S),
 											Coef1 != 0,% remove
 											Coef2 != 0,% remove
 											C1 != C2.
 % 						### APPLYING THE RULE ###
 % 						### CASE 1: parent node has more than 2 children ###
 % add the two nodes together
-assigned(C1, nodeCoef(Sum), S) 			:-	_selected(action(data(N1, C1, C2, Sum), addCommTerms), S),
-											holds(N1, numChildren(Kids), S), Kids > 2.
+assigned(C1, field(nodeCoef,Sum), S) 			:-	_selected(action(data(N1, C1, C2, Sum), addCommTerms), S),
+											holds(N1, field(numChildren,Kids), S), Kids > 2.
 % decrement number of children
-assigned(N1, numChildren(Kids - 1), S) 	:-	_selected(action(data(N1, C1, C2, Sum), addCommTerms), S),
-											holds(N1, numChildren(Kids), S), Kids > 2.
+assigned(N1, field(numChildren,Kids - 1), S) 	:-	_selected(action(data(N1, C1, C2, Sum), addCommTerms), S),
+											holds(N1, field(numChildren,Kids), S), Kids > 2.
 
 
 % 						### CASE 2: parent node has exactly 2 children ###
@@ -48,21 +48,21 @@ assigned(N1, numChildren(Kids - 1), S) 	:-	_selected(action(data(N1, C1, C2, Sum
 % TODO: cannot use inheritFrom here b/c coefficient isn't directly inherited. 
 % remove old facts about parent
 removed(N1, Fact, S) 				:-	_selected(action(data(N1, C1, C2, Sum), addCommTerms), S),
-										holds(N1, numChildren(Kids), S), Kids == 2,
+										holds(N1, field(numChildren,Kids), S), Kids == 2,
 										holds(C2, Fact, S).
 % parent ID is still a node, becomes a monomial, and gains node parameters
-assigned(N1, node(N1), S) 			:-	_selected(action(data(N1, C1, C2, Sum), addCommTerms), S),
-										holds(N1, numChildren(Kids), S), Kids == 2.
-assigned(N1, type(mono), S) 		:-	_selected(action(data(N1, C1, C2, Sum), addCommTerms), S),
-										holds(N1, numChildren(Kids), S), Kids == 2.
-assigned(N1, nodeCoef(Sum), S) 		:-	_selected(action(data(N1, C1, C2, Sum), addCommTerms), S),
-										holds(N1, numChildren(Kids), S), Kids == 2.
-assigned(N1, nodeDeg(Degree), S) 	:-	_selected(action(data(N1, C1, C2, Sum), addCommTerms), S),
-										holds(N1, numChildren(Kids), S), Kids == 2,
-										holds(C1, nodeDeg(Degree), S) .
+assigned(N1, field(node,N1), S) 			:-	_selected(action(data(N1, C1, C2, Sum), addCommTerms), S),
+										holds(N1, field(numChildren,Kids), S), Kids == 2.
+assigned(N1, field(type,mono), S) 		:-	_selected(action(data(N1, C1, C2, Sum), addCommTerms), S),
+										holds(N1, field(numChildren,Kids), S), Kids == 2.
+assigned(N1, field(nodeCoef,Sum), S) 		:-	_selected(action(data(N1, C1, C2, Sum), addCommTerms), S),
+										holds(N1, field(numChildren,Kids), S), Kids == 2.
+assigned(N1, field(nodeDeg,Degree), S) 	:-	_selected(action(data(N1, C1, C2, Sum), addCommTerms), S),
+										holds(N1, field(numChildren,Kids), S), Kids == 2,
+										holds(C1, field(nodeDeg,Degree), S) .
 % C1 child node is deleted 
 removed(C1, Fact, S)				:-	_selected(action(data(N1, C1, C2, Sum), addCommTerms), S),
-										holds(N1, numChildren(Kids), S), Kids == 2,
+										holds(N1, field(numChildren,Kids), S), Kids == 2,
 										holds(C1, Fact, S).
 
 %						### BOTH CASES ###
@@ -81,17 +81,17 @@ removed(C2, Fact, S)	:-	_selected(action(data(N1, C1, C2, Sum), addCommTerms), S
 % TODO: refactor action data from actions!
 % there's an add poly node with two children that are monomials, one of them has coef == 0 
 % the only info we remember is the identity of the parent node and the node to remove
-possible(action(data(N1, C1, C2), addIdent), S) 	:- 	holds(N1, nodeOper(add), S),
-											holds(N1, parentOf(C1), S),
-											holds(N1, parentOf(C2), S),
-											holds(C1, nodeCoef(Coef1), S),
-											holds(C2, nodeCoef(0), S),
+possible(action(data(N1, C1, C2), addIdent), S) 	:- 	holds(N1, field(nodeOper,add), S),
+											holds(N1, field(parentOf,C1), S),
+											holds(N1, field(parentOf,C2), S),
+											holds(C1, field(nodeCoef,Coef1), S),
+											holds(C2, field(nodeCoef,0), S),
 											C1 != C2.
 % 						### APPLYING THE RULE ###
 % 						### CASE 1: parent node has more than 2 children ###
 % decrement number of children
-assigned(N1, numChildren(Kids - 1), S) 	:-	_selected(action(data(N1, C1, C2), addIdent), S),
-											holds(N1, numChildren(Kids), S), Kids > 2.
+assigned(N1, field(numChildren,Kids - 1), S) 	:-	_selected(action(data(N1, C1, C2), addIdent), S),
+											holds(N1, field(numChildren,Kids), S), Kids > 2.
 
 
 % 						### CASE 2: parent node has exactly 2 children ###
@@ -99,10 +99,10 @@ assigned(N1, numChildren(Kids - 1), S) 	:-	_selected(action(data(N1, C1, C2), ad
 
 % parent inherits C1 child's properities
 inheritFrom(N1, C1, S) :-	_selected(action(data(N1, C1, C2), addIdent), S), 
-										holds(N1, numChildren(Kids), S), Kids == 2.
+										holds(N1, field(numChildren,Kids), S), Kids == 2.
 % C1 child node is deleted 
 removed(C1, Fact, S)				:-	_selected(action(data(N1, C1, C2), addIdent), S),
-										holds(N1, numChildren(Kids), S), Kids == 2,
+										holds(N1, field(numChildren,Kids), S), Kids == 2,
 										holds(C1, Fact, S).
 
 %						### BOTH CASES ###
@@ -118,13 +118,13 @@ removed(C2, Fact, S)	:-	_selected(action(data(N1, C1, C2), addIdent), S),
 %================================================================================
 % 						### RULE CONDITIONS ###
 % There's a div node with two children that are equal
-possible(action(data(N1, C1, C2), divInverse), S) 	:- 	holds(N1, nodeOper(div), S),
-											holds(N1, parentOf(C1), S),
-											holds(N1, parentOf(C2), S),
-											holds(C1, nodeCoef(Coef), S),
-											holds(C2, nodeCoef(Coef), S),
-											holds(C1, nodeDeg(Deg), S),
-											holds(C2, nodeDeg(Deg), S),
+possible(action(data(N1, C1, C2), divInverse), S) 	:- 	holds(N1, field(nodeOper,div), S),
+											holds(N1, field(parentOf,C1), S),
+											holds(N1, field(parentOf,C2), S),
+											holds(C1, field(nodeCoef,Coef), S),
+											holds(C2, field(nodeCoef,Coef), S),
+											holds(C1, field(nodeDeg,Deg), S),
+											holds(C2, field(nodeDeg,Deg), S),
 											C1 != C2.
 
 % 						### APPLYING THE RULE ###
@@ -132,10 +132,10 @@ possible(action(data(N1, C1, C2), divInverse), S) 	:- 	holds(N1, nodeOper(div), 
 
 % parent becomes monomial with value 1, we must manually set the side and depth values
 inheritFrom(N1, one, S) 		:-	_selected(action(data(N1, C1, C2), divInverse), S). 
-assigned(N1, depth(Depth), S)	:-	_selected(action(data(N1, C1, C2), divInverse), S),
-									holds(N1, depth(Depth), S).
-assigned(N1, side(Side), S) 	:-	_selected(action(data(N1, C1, C2), divInverse), S),
-									holds(N1, side(Side), S).
+assigned(N1, field(depth,Depth), S)	:-	_selected(action(data(N1, C1, C2), divInverse), S),
+									holds(N1, field(depth,Depth), S).
+assigned(N1, field(side,Side), S) 	:-	_selected(action(data(N1, C1, C2), divInverse), S),
+									holds(N1, field(side,Side), S).
 
 % completely erase both children
 removed(C1, Fact, S)			:-	_selected(action(data(N1, C1, C2), divInverse), S),
@@ -152,21 +152,21 @@ removed(C2, Fact, S)			:-	_selected(action(data(N1, C1, C2), divInverse), S),
 %================================================================================
 % 						### RULE CONDITIONS ###
 % There's a div node with two children that are equal
-possible(action(data(N1, C1, C2), multIdent), S) 	:- 	holds(N1, nodeOper(mul), S),
-											holds(N1, parentOf(C1), S),
-											holds(N1, parentOf(C2), S),
-											holds(C1, nodeCoef(Coef), S),
-											holds(C2, nodeCoef(1), S),
-											holds(C2, nodeDeg(0), S),
+possible(action(data(N1, C1, C2), multIdent), S) 	:- 	holds(N1, field(nodeOper,mul), S),
+											holds(N1, field(parentOf,C1), S),
+											holds(N1, field(parentOf,C2), S),
+											holds(C1, field(nodeCoef,Coef), S),
+											holds(C2, field(nodeCoef,1), S),
+											holds(C2, field(nodeDeg,0), S),
 											C1 != C2.
 
 % 						### APPLYING THE RULE ###
 % 						### CASE 1: parent node has more than 2 children ###
 % decrement number of children
-removed(N1, numChildren(Kids), S) 		:-	_selected(action(data(N1, C1, C2), multIdent), S),
-											holds(N1, numChildren(Kids), S), Kids > 2.
-assigned(N1, numChildren(Kids - 1), S) 	:-	_selected(action(data(N1, C1, C2), multIdent), S),
-											holds(N1, numChildren(Kids), S), Kids > 2.
+removed(N1, field(numChildren,Kids), S) 		:-	_selected(action(data(N1, C1, C2), multIdent), S),
+											holds(N1, field(numChildren,Kids), S), Kids > 2.
+assigned(N1, field(numChildren,Kids - 1), S) 	:-	_selected(action(data(N1, C1, C2), multIdent), S),
+											holds(N1, field(numChildren,Kids), S), Kids > 2.
 
 
 % 						### CASE 2: parent node has exactly 2 children ###
@@ -174,10 +174,10 @@ assigned(N1, numChildren(Kids - 1), S) 	:-	_selected(action(data(N1, C1, C2), mu
 
 % parent inherits C1 child's properities
 inheritFrom(N1, C1, S) 					:-	_selected(action(data(N1, C1, C2), multIdent), S), 
-											holds(N1, numChildren(Kids), S), Kids == 2.
+											holds(N1, field(numChildren,Kids), S), Kids == 2.
 % C1 child node is deleted 
 removed(C1, Fact, S)					:-	_selected(action(data(N1, C1, C2), multIdent), S),
-											holds(N1, numChildren(Kids), S), Kids == 2,
+											holds(N1, field(numChildren,Kids), S), Kids == 2,
 											holds(C1, Fact, S).
 
 %						### BOTH CASES ###
