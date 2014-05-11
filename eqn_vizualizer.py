@@ -60,7 +60,7 @@ def formPolyString(types, operator,mono, degree, coef, children, root):
 		return '(' + makeMonomialStr(root, coef, degree) + ')'
 
 	child_strings = []
-	for child in children[root]:
+	for child in sorted(children[root]):
 		child_strings.append( formPolyString(types, operator, mono, degree, coef, children, child) )
 	return '(' + op_symbols[operator[root]].join(child_strings) + ')'
 

@@ -14,7 +14,7 @@
 % constants governing monomial values and tree depth
 #const max_coeff	= 5.
 #const max_degree	= 2.
-#const max_depth 	= 1.
+#const max_depth 	= 2.
 #const max_terms	= 2.		% max number of children a
 
 coeffValue(-max_coeff..max_coeff).
@@ -43,6 +43,10 @@ type(ID, mono)							:-	node(ID), depth(ID, Depth), Depth >= max_depth.
 1 {nodeOper(ID, Op) : operator(Op) } 1 				:-	type(ID, poly) .										% poly nodes have a single operator...
 1 { numChildren(ID, Terms) : termNum(Terms) } 1 	:-	type(ID, poly), not nodeOper(ID, div).					% ..and some number of children 
 numChildren(ID, 2) 									:-	type(ID, poly), nodeOper(ID, div).						% divison operators have exactly two children
+
+% label numerator and denominator of a fraction separately
+numer(ID, Numer) :- nodeOper(ID, div), parentOf(ID, Numer), parentOf(ID, Denom), Numer < Denom.
+denom(ID, Denom) :- nodeOper(ID, div), parentOf(ID, Numer), parentOf(ID, Denom), Numer < Denom.
 
 % generate parent relationship.
 1 { parentOf(ID, ID*max_terms + IDNum) } 1			:- 	numChildren(ID, Num), IDNum = 1..Num. 

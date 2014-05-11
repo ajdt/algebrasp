@@ -10,6 +10,8 @@ step(0..max_steps).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%% INITIAL EQN FACTS %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % all of the facts created by eqn_generator initially hold 
+initially(ID, field(numer, Num))			:-	numer(ID,Num).
+initially(ID, field(denom, Denom))			:-	denom(ID,Denom).
 initially(ID, field(type, T))				:-	type(ID,T).
 initially(ID, field(nodeOper, Op))			:-	nodeOper(ID,Op).
 initially(ID, field(numChildren, Num))		:-	numChildren(ID,Num).
@@ -124,19 +126,21 @@ _side(ID, S, S)				:-	holds(ID, field(side,S), S).
 _depth(ID, D, S)			:-	holds(ID, field(depth,D), S).			
 _nodeCoef(ID, C, S)			:-	holds(ID, field(nodeCoef,C), S).		
 _nodeDeg(ID, D, S)			:-	holds(ID, field(nodeDeg,D), S).		
+_numer(ID, D, S)			:-	holds(ID, field(numer,D), S).		
+_denom(ID, D, S)			:-	holds(ID, field(denom,D), S).		
 
 %#show holds/2.
 %#show action/1.
 #show action/1.
-#show _node/1.
-#show _type/2.
-#show _nodeOper/2.
-#show _numChildren/2.
-#show _parentOf/2.
-#show _side/2.
-#show _depth/2.
-#show _nodeCoef/2.
-#show _nodeDeg/2.
+%#show _node/1.
+%#show _type/2.
+%#show _nodeOper/2.
+%#show _numChildren/2.
+%#show _parentOf/2.
+%#show _side/2.
+%#show _depth/2.
+%#show _nodeCoef/2.
+%#show _nodeDeg/2.
 
 % used for eqn solver steps
 #show _type/3.
@@ -147,4 +151,6 @@ _nodeDeg(ID, D, S)			:-	holds(ID, field(nodeDeg,D), S).
 #show _depth/3.
 #show _nodeCoef/3.
 #show _nodeDeg/3.
+#show _numer/3.
+#show _denom/3.
 
