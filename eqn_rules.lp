@@ -144,3 +144,46 @@ removed(C2, Fact, S)			:-	_selected(action(data(N1, C1, C2), divInverse), S),
 									holds(C2, Fact, S).
 %================================================================================
 %================================================================================
+
+
+
+%================================================================================
+% multIdentity: a*x^b * 1 ----> a*x^b
+%================================================================================
+% 						### RULE CONDITIONS ###
+% There's a div node with two children that are equal
+possible(action(data(N1, C1, C2), multIdent), S) 	:- 	holds(N1, nodeOper(mul), S),
+											holds(N1, parentOf(C1), S),
+											holds(N1, parentOf(C2), S),
+											holds(C1, nodeCoef(Coef), S),
+											holds(C2, nodeCoef(1), S),
+											holds(C2, nodeDeg(0), S),
+											C1 != C2.
+
+% 						### APPLYING THE RULE ###
+% 						### CASE 1: parent node has more than 2 children ###
+% decrement number of children
+removed(N1, numChildren(Kids), S) 		:-	_selected(action(data(N1, C1, C2), multIdent), S),
+											holds(N1, numChildren(Kids), S), Kids > 2.
+assigned(N1, numChildren(Kids - 1), S) 	:-	_selected(action(data(N1, C1, C2), multIdent), S),
+											holds(N1, numChildren(Kids), S), Kids > 2.
+
+
+% 						### CASE 2: parent node has exactly 2 children ###
+%--------------------------------------------------------------------------------
+
+% parent inherits C1 child's properities
+inheritFrom(N1, C1, S) 					:-	_selected(action(data(N1, C1, C2), multIdent), S), 
+											holds(N1, numChildren(Kids), S), Kids == 2.
+% C1 child node is deleted 
+removed(C1, Fact, S)					:-	_selected(action(data(N1, C1, C2), multIdent), S),
+											holds(N1, numChildren(Kids), S), Kids == 2,
+											holds(C1, Fact, S).
+
+%						### BOTH CASES ###
+%--------------------------------------------------------------------------------
+% completely erase second node											
+removed(C2, Fact, S)	:-	_selected(action(data(N1, C1, C2), multIdent), S),
+							holds(C2, Fact, S).
+%================================================================================
+%================================================================================
