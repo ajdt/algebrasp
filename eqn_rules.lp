@@ -35,41 +35,35 @@ possible(action(data(N1, C1, C2, Coef1+Coef2), addCommTerms), S) 	:- 	holds(N1, 
 % 						### APPLYING THE RULE ###
 % 						### CASE 1: parent node has more than 2 children ###
 % add the two nodes together
-assigned(C1, field(nodeCoef,Sum), S) 			:-	_selected(action(data(N1, C1, C2, Sum), addCommTerms), S),
-											holds(N1, field(numChildren,Kids), S), Kids > 2.
+update(C1, field(nodeCoef,Sum), S) 			:-	_selected(action(data(N1, C1, C2, Sum), addCommTerms), S),
+												holds(N1, field(numChildren,Kids), S), Kids > 2.
 % decrement number of children
-assigned(N1, field(numChildren,Kids - 1), S) 	:-	_selected(action(data(N1, C1, C2, Sum), addCommTerms), S),
-											holds(N1, field(numChildren,Kids), S), Kids > 2.
-
+update(N1, field(numChildren,Kids - 1), S) 	:-	_selected(action(data(N1, C1, C2, Sum), addCommTerms), S),
+												holds(N1, field(numChildren,Kids), S), Kids > 2.
 
 % 						### CASE 2: parent node has exactly 2 children ###
 %--------------------------------------------------------------------------------
 % 								so parent node becomes monomial.
-% TODO: cannot use inheritFrom here b/c coefficient isn't directly inherited. 
+% NOTE: cannot use inheritFrom here b/c coefficient isn't directly inherited. 
 % remove old facts about parent
-removed(N1, Fact, S) 				:-	_selected(action(data(N1, C1, C2, Sum), addCommTerms), S),
-										holds(N1, field(numChildren,Kids), S), Kids == 2,
-										holds(C2, Fact, S).
-% parent ID is still a node, becomes a monomial, and gains node parameters
-assigned(N1, field(node,N1), S) 			:-	_selected(action(data(N1, C1, C2, Sum), addCommTerms), S),
-										holds(N1, field(numChildren,Kids), S), Kids == 2.
+delete(N1, S) 							:-	_selected(action(data(N1, C1, C2, Sum), addCommTerms), S),
+											holds(N1, field(numChildren,2), S).
+% parent ID becomes a monomial, and gains node parameters
 assigned(N1, field(type,mono), S) 		:-	_selected(action(data(N1, C1, C2, Sum), addCommTerms), S),
-										holds(N1, field(numChildren,Kids), S), Kids == 2.
-assigned(N1, field(nodeCoef,Sum), S) 		:-	_selected(action(data(N1, C1, C2, Sum), addCommTerms), S),
-										holds(N1, field(numChildren,Kids), S), Kids == 2.
+											holds(N1, field(numChildren,2), S).
+assigned(N1, field(nodeCoef,Sum), S) 	:-	_selected(action(data(N1, C1, C2, Sum), addCommTerms), S),
+											holds(N1, field(numChildren,2), S).
 assigned(N1, field(nodeDeg,Degree), S) 	:-	_selected(action(data(N1, C1, C2, Sum), addCommTerms), S),
-										holds(N1, field(numChildren,Kids), S), Kids == 2,
-										holds(C1, field(nodeDeg,Degree), S) .
+											holds(N1, field(numChildren,2), S),
+											holds(C1, field(nodeDeg,Degree), S) .
 % C1 child node is deleted 
-removed(C1, Fact, S)				:-	_selected(action(data(N1, C1, C2, Sum), addCommTerms), S),
-										holds(N1, field(numChildren,Kids), S), Kids == 2,
-										holds(C1, Fact, S).
+deleteChild(N1, C1, S)					:-	_selected(action(data(N1, C1, C2, Sum), addCommTerms), S),
+											holds(N1, field(numChildren,2), S).
 
 %						### BOTH CASES ###
 %--------------------------------------------------------------------------------
 % completely erase second node											
-removed(C2, Fact, S)	:-	_selected(action(data(N1, C1, C2, Sum), addCommTerms), S),
-							holds(C2, Fact, S).
+deleteChild(N1, C2)		:-	_selected(action(data(N1, C1, C2, Sum), addCommTerms), S).
 %================================================================================
 %================================================================================
 
@@ -88,30 +82,12 @@ possible(action(data(N1, C1, C2), addIdent), S) 	:- 	holds(N1, field(nodeOper,ad
 											holds(C2, field(nodeCoef,0), S),
 											C1 != C2.
 % 						### APPLYING THE RULE ###
-% 						### CASE 1: parent node has more than 2 children ###
-% decrement number of children
-assigned(N1, field(numChildren,Kids - 1), S) 	:-	_selected(action(data(N1, C1, C2), addIdent), S),
-											holds(N1, field(numChildren,Kids), S), Kids > 2.
-
-
-% 						### CASE 2: parent node has exactly 2 children ###
-%--------------------------------------------------------------------------------
-
-% parent inherits C1 child's properities
-inheritFrom(N1, C1, S) :-	_selected(action(data(N1, C1, C2), addIdent), S), 
-										holds(N1, field(numChildren,Kids), S), Kids == 2.
-% C1 child node is deleted 
-removed(C1, Fact, S)				:-	_selected(action(data(N1, C1, C2), addIdent), S),
-										holds(N1, field(numChildren,Kids), S), Kids == 2,
-										holds(C1, Fact, S).
-
-%						### BOTH CASES ###
-%--------------------------------------------------------------------------------
-% completely erase second node											
-removed(C2, Fact, S)	:-	_selected(action(data(N1, C1, C2), addIdent), S),
-							holds(C2, Fact, S).
+% shrink subtree by removing the zero node
+shrinkSubtree(N1, ZeroNode, S)					:-	_selected(action(data(N1, C1, ZeroNode), addIdent), S).
 %================================================================================
 %================================================================================
+
+
 
 %================================================================================
 % divideInverse: a*x^b / a*x^b ----> 1
@@ -130,18 +106,14 @@ possible(action(data(N1, C1, C2), divInverse), S) 	:- 	holds(N1, field(nodeOper,
 % 						### APPLYING THE RULE ###
 %--------------------------------------------------------------------------------
 
-% parent becomes monomial with value 1, we must manually set the side and depth values
-inheritFrom(N1, one, S) 		:-	_selected(action(data(N1, C1, C2), divInverse), S). 
-assigned(N1, field(depth,Depth), S)	:-	_selected(action(data(N1, C1, C2), divInverse), S),
-									holds(N1, field(depth,Depth), S).
+% parent becomes monomial with value 1, we must manually set its side value
+inheritFrom(N1, one, S) 			:-	_selected(action(data(N1, C1, C2), divInverse), S). 
 assigned(N1, field(side,Side), S) 	:-	_selected(action(data(N1, C1, C2), divInverse), S),
-									holds(N1, field(side,Side), S).
+										holds(N1, field(side,Side), S).
 
 % completely erase both children
-removed(C1, Fact, S)			:-	_selected(action(data(N1, C1, C2), divInverse), S),
-									holds(C1, Fact, S).
-removed(C2, Fact, S)			:-	_selected(action(data(N1, C1, C2), divInverse), S),
-									holds(C2, Fact, S).
+deleteChild(N1, C1, S) 					:-	_selected(action(data(N1, C1, C2), divInverse), S).
+deleteChild(N1, C2, S) 					:-	_selected(action(data(N1, C1, C2), divInverse), S).
 %================================================================================
 %================================================================================
 
@@ -161,29 +133,7 @@ possible(action(data(N1, C1, C2), multIdent), S) 	:- 	holds(N1, field(nodeOper,m
 											C1 != C2.
 
 % 						### APPLYING THE RULE ###
-% 						### CASE 1: parent node has more than 2 children ###
-% decrement number of children
-removed(N1, field(numChildren,Kids), S) 		:-	_selected(action(data(N1, C1, C2), multIdent), S),
-											holds(N1, field(numChildren,Kids), S), Kids > 2.
-assigned(N1, field(numChildren,Kids - 1), S) 	:-	_selected(action(data(N1, C1, C2), multIdent), S),
-											holds(N1, field(numChildren,Kids), S), Kids > 2.
-
-
-% 						### CASE 2: parent node has exactly 2 children ###
-%--------------------------------------------------------------------------------
-
-% parent inherits C1 child's properities
-inheritFrom(N1, C1, S) 					:-	_selected(action(data(N1, C1, C2), multIdent), S), 
-											holds(N1, field(numChildren,Kids), S), Kids == 2.
-% C1 child node is deleted 
-removed(C1, Fact, S)					:-	_selected(action(data(N1, C1, C2), multIdent), S),
-											holds(N1, field(numChildren,Kids), S), Kids == 2,
-											holds(C1, Fact, S).
-
-%						### BOTH CASES ###
-%--------------------------------------------------------------------------------
-% completely erase second node											
-removed(C2, Fact, S)	:-	_selected(action(data(N1, C1, C2), multIdent), S),
-							holds(C2, Fact, S).
+% shrink the subtree by removing the child with value 1
+shrinkSubtree(N1, NodeOne, S)					:-	_selected(action(data(N1, C1, NodeOne), multIdent), S).
 %================================================================================
 %================================================================================

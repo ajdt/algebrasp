@@ -42,7 +42,8 @@ removed(ID, field(Name, OrigValue), S)	:- update(ID, field(Name, Value), S),
 %--------------------------------------------------------------------------------
 % N1 inherits all field() predicates from C1, not hidden() predicates
 % NOTE: DOES NOT remove C1
-update(N1, field(Name, Value), S)		:- inheritFrom(N1, C1, S), holds(C1, field(Name, Value), S).
+assigned(N1, field(Name, Value), S)		:- inheritFrom(N1, C1, S), holds(C1, field(Name, Value), S).	% add new facts
+removed(N1, field(Name, Value), S)		:- inheritFrom(N1, C1, S), holds(N1, field(Name, Value), S). 	% remove all old facts
 
 % 						### DELETING A NODE
 %--------------------------------------------------------------------------------
@@ -50,10 +51,18 @@ update(N1, field(Name, Value), S)		:- inheritFrom(N1, C1, S), holds(C1, field(Na
 removed(ToDelete, Fact, S)		:-	delete(ToDelete, S),
 									holds(ToDelete, Fact, S) .
 
+% 						### DELETE CHILD
+%--------------------------------------------------------------------------------
+% removes a child and paren'ts reference to it
+% NOTE: does not update numChildren counter. This must be done manually
+delete(ToDelete, S)								:-	deleteChild(Parent, ToDelete, S).
+removed(Parent, fact(parentOf, ToDelete), S)	:-	deleteChild(Parent, ToDelete, S).
+									
+
 % 						### REMOVING NODE FROM SUBTREE
 %--------------------------------------------------------------------------------
 % shrinking a subtree by one node!
-delete(ToRemove, S) :- shrinkSubtree(Parent, ToRemove, S).
+deleteChild(Parent, ToRemove, S) :- shrinkSubtree(Parent, ToRemove, S).
 							
 % if have more than two kids, then just decrement num kids
 update(Parent, field(numChildren,Kids - 1), S)	:-	shrinkSubtree(Parent, ToRemove, S),
@@ -64,7 +73,7 @@ inheritFromAndDelete(Parent, SecondKid, S)		:-	shrinkSubtree(Parent, ToRemove, S
 													holds(Parent, field(parentOf,SecondKid), S),
 													SecondKid != ToRemove.
 inheritFrom(Parent, SecondKid, S)				:- inheritFromAndDelete(Parent, SecondKid, S).
-delete(SecondKid, S) 							:- inheritFromAndDelete(Parent, SecondKid, S).
+deleteChild(Parent, SecondKid, S) 				:- inheritFromAndDelete(Parent, SecondKid, S).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%% RULE SELECTION %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % possible actions:

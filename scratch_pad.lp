@@ -4,26 +4,6 @@
 
 
 
-% abstracted notion of deleting a node
-removed(ToDelete, Fact, S)		:-	delete(ToDelete, S),
-									holds(ToDelete, Fact, S) .
-
-% TODO: try to make this code more concise Too!!!
-delete(ToRemove, S) :- shrinkSubtree(Parent, ToRemove, S).
-							
-% if have more than two kids, then just decrement num kids
-update(Parent, field(numChildren,Kids - 1), S)	:-	shrinkSubtree(Parent, ToRemove, S),
-													holds(Parent, field(numChildren,Kids), S),
-													Kids > 2.
-
-% if exactly two kids, then inherit from last remaining child...
-inheritFromAndDelete(Parent, SecondKid, S)	:-	shrinkSubtree(Parent, ToRemove, S),
-												holds(Parent, field(numChildren,2), S),
-												holds(Parent, field(parentOf,SecondKid), S),
-												SecondKid != ToRemove.
-
-inheritFrom(Parent, SecondKid, S)			:- inheritFromAndDelete(Parent, SecondKid, S).
-delete(SecondKid, S) 						:- inheritFromAndDelete(Parent, SecondKid, S).
 
 % this is where I'll be testing new rules to add to the solver
 
