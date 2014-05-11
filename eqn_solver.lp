@@ -8,7 +8,7 @@
 #const max_steps = 1. % max number of actions until a solution is reached
 step(0..max_steps). 
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% EQN STATES AT GIVEN STEP %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% INITIAL EQN FACTS %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % all of the facts created by eqn_generator initially hold 
 initially(ID, field(type, T))				:-	type(ID,T).
 initially(ID, field(nodeOper, Op))			:-	nodeOper(ID,Op).
@@ -24,19 +24,47 @@ initially(ID, field(nodeDeg, D))			:-	nodeDeg(ID, D).
 holds(ID, Fact, 0)		:-	initially(ID, Fact).
 
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% EDITING EQN FACTS %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Facts can be removed, updated, or assigned at each step, if not, then they carry over from last step.
+
 % every fact that isn't removed at step S, holds at the next step
 holds(ID, Fact, S+1)	:-	holds(ID, Fact, S), not removed(ID, Fact, S), step(S+1).
 holds(ID, Fact, S+1)	:-	assigned(ID, Fact, S), step(S+1). % new fact that is generated
 
+% 						### UPDATE FACT
+%--------------------------------------------------------------------------------
 % to update a field means to remove old field and add the new field value
 assigned(ID, Fact, S) :- update(ID, Fact, S).
 removed(ID, field(Name, OrigValue), S)	:- update(ID, field(Name, Value), S), 
 										holds(ID, field(Name, OrigValue), S).
 
-% if N1 inherits the field properties of C1, at step S then add these new properties and remove the old ones
-% NOTE: DOES NOT remove C1, and only field() properties are inherited not hidden() properties
+% 						### INHERITING FACTS
+%--------------------------------------------------------------------------------
+% N1 inherits all field() predicates from C1, not hidden() predicates
+% NOTE: DOES NOT remove C1
 update(N1, field(Name, Value), S)		:- inheritFrom(N1, C1, S), holds(C1, field(Name, Value), S).
+
+% 						### DELETING A NODE
+%--------------------------------------------------------------------------------
+% abstracted notion of deleting a node
+removed(ToDelete, Fact, S)		:-	delete(ToDelete, S),
+									holds(ToDelete, Fact, S) .
+
+% 						### REMOVING NODE FROM SUBTREE
+%--------------------------------------------------------------------------------
+% shrinking a subtree by one node!
+delete(ToRemove, S) :- shrinkSubtree(Parent, ToRemove, S).
+							
+% if have more than two kids, then just decrement num kids
+update(Parent, field(numChildren,Kids - 1), S)	:-	shrinkSubtree(Parent, ToRemove, S),
+													holds(Parent, field(numChildren,Kids), S), Kids > 2.
+% if exactly two kids, then replace remaining child...
+inheritFromAndDelete(Parent, SecondKid, S)		:-	shrinkSubtree(Parent, ToRemove, S),
+													holds(Parent, field(numChildren,2), S),
+													holds(Parent, field(parentOf,SecondKid), S),
+													SecondKid != ToRemove.
+inheritFrom(Parent, SecondKid, S)				:- inheritFromAndDelete(Parent, SecondKid, S).
+delete(SecondKid, S) 							:- inheritFromAndDelete(Parent, SecondKid, S).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%% RULE SELECTION %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % possible actions:
@@ -63,8 +91,6 @@ actionforStep(S) :- _selected(Action,S).
 % project just on the action name, as opposed to the specific terms the action applies to. 
 % later, can project on action occuring at a particular time step: action(Name, Step)
 action(Name) :- _selected(action(X,Name), S).
-
-
 
 
 
