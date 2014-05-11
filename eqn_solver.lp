@@ -47,17 +47,17 @@ removed(N1, Fact, S)	:- inheritFrom(N1, C1, S), holds(N1, Fact, S).
 
 
 % do no more than one action per time step
-0 { do_action(Action, S) : possible(Action, S) } 1 :- step(S).
+0 { _selected(Action, S) : possible(Action, S) } 1 :- step(S).
 
 % avoid no-ops between rule applications. All rule applications happen first.
-actionforStep(S) :- do_action(Action,S).
+actionforStep(S) :- _selected(Action,S).
 :- step(S), step(S+1), not actionforStep(S), actionforStep(S+1).
 
 
 
 % project just on the action name, as opposed to the specific terms the action applies to. 
 % later, can project on action occuring at a particular time step: action(Name, Step)
-action(Name) :- do_action(action(X,Name), S).
+action(Name) :- _selected(action(X,Name), S).
 
 
 

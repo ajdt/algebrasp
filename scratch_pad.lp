@@ -20,7 +20,7 @@ possible(action(data(N1, C1, C2), addIdent), S) 	:- 	holds(N1, type(poly), S),
 % 						### APPLYING THE RULE ###
 % 						### CASE 1: parent node has more than 2 children ###
 % decrement number of children
-assigned(N1, numChildren(Kids - 1), S) 	:-	do_action(action(data(N1, C1, C2), addIdent), S),
+assigned(N1, numChildren(Kids - 1), S) 	:-	_selected(action(data(N1, C1, C2), addIdent), S),
 											holds(N1, numChildren(Kids), S), Kids > 2.
 
 
@@ -28,17 +28,17 @@ assigned(N1, numChildren(Kids - 1), S) 	:-	do_action(action(data(N1, C1, C2), ad
 %--------------------------------------------------------------------------------
 
 % parent inherits C1 child's properities
-inheritFrom(N1, C1, S) :-	do_action(action(data(N1, C1, C2), addIdent), S), 
+inheritFrom(N1, C1, S) :-	_selected(action(data(N1, C1, C2), addIdent), S), 
 										holds(N1, numChildren(Kids), S), Kids == 2.
 % C1 child node is deleted 
-removed(C1, Fact, S)				:-	do_action(action(data(N1, C1, C2), addIdent), S),
+removed(C1, Fact, S)				:-	_selected(action(data(N1, C1, C2), addIdent), S),
 										holds(N1, numChildren(Kids), S), Kids == 2,
 										holds(C1, Fact, S).
 
 %						### BOTH CASES ###
 %--------------------------------------------------------------------------------
 % completely erase second node											
-removed(C2, Fact, S)	:-	do_action(action(data(N1, C1, C2), addIdent), S),
+removed(C2, Fact, S)	:-	_selected(action(data(N1, C1, C2), addIdent), S),
 							holds(C2, Fact, S).
 %================================================================================
 %================================================================================

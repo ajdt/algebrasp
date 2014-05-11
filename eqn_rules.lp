@@ -27,10 +27,10 @@ possible(action(data(N1, C1, C2, Coef1+Coef2), addCommTerms), S) 	:- 	holds(N1, 
 % 						### APPLYING THE RULE ###
 % 						### CASE 1: parent node has more than 2 children ###
 % add the two nodes together
-assigned(C1, nodeCoef(Sum), S) 			:-	do_action(action(data(N1, C1, C2, Sum), addCommTerms), S),
+assigned(C1, nodeCoef(Sum), S) 			:-	_selected(action(data(N1, C1, C2, Sum), addCommTerms), S),
 											holds(N1, numChildren(Kids), S), Kids > 2.
 % decrement number of children
-assigned(N1, numChildren(Kids - 1), S) 	:-	do_action(action(data(N1, C1, C2, Sum), addCommTerms), S),
+assigned(N1, numChildren(Kids - 1), S) 	:-	_selected(action(data(N1, C1, C2, Sum), addCommTerms), S),
 											holds(N1, numChildren(Kids), S), Kids > 2.
 
 
@@ -38,28 +38,28 @@ assigned(N1, numChildren(Kids - 1), S) 	:-	do_action(action(data(N1, C1, C2, Sum
 %--------------------------------------------------------------------------------
 % 								so parent node becomes monomial.
 % remove old facts about parent
-removed(N1, Fact, S) 				:-	do_action(action(data(N1, C1, C2, Sum), addCommTerms), S),
+removed(N1, Fact, S) 				:-	_selected(action(data(N1, C1, C2, Sum), addCommTerms), S),
 										holds(N1, numChildren(Kids), S), Kids == 2,
 										holds(C2, Fact, S).
 % parent ID is still a node, becomes a monomial, and gains node parameters
-assigned(N1, node(N1), S) 			:-	do_action(action(data(N1, C1, C2, Sum), addCommTerms), S),
+assigned(N1, node(N1), S) 			:-	_selected(action(data(N1, C1, C2, Sum), addCommTerms), S),
 										holds(N1, numChildren(Kids), S), Kids == 2.
-assigned(N1, type(mono), S) 		:-	do_action(action(data(N1, C1, C2, Sum), addCommTerms), S),
+assigned(N1, type(mono), S) 		:-	_selected(action(data(N1, C1, C2, Sum), addCommTerms), S),
 										holds(N1, numChildren(Kids), S), Kids == 2.
-assigned(N1, nodeCoef(Sum), S) 		:-	do_action(action(data(N1, C1, C2, Sum), addCommTerms), S),
+assigned(N1, nodeCoef(Sum), S) 		:-	_selected(action(data(N1, C1, C2, Sum), addCommTerms), S),
 										holds(N1, numChildren(Kids), S), Kids == 2.
-assigned(N1, nodeDeg(Degree), S) 	:-	do_action(action(data(N1, C1, C2, Sum), addCommTerms), S),
+assigned(N1, nodeDeg(Degree), S) 	:-	_selected(action(data(N1, C1, C2, Sum), addCommTerms), S),
 										holds(N1, numChildren(Kids), S), Kids == 2,
 										holds(C1, nodeDeg(Degree), S) .
 % C1 child node is deleted 
-removed(C1, Fact, S)				:-	do_action(action(data(N1, C1, C2, Sum), addCommTerms), S),
+removed(C1, Fact, S)				:-	_selected(action(data(N1, C1, C2, Sum), addCommTerms), S),
 										holds(N1, numChildren(Kids), S), Kids == 2,
 										holds(C1, Fact, S).
 
 %						### BOTH CASES ###
 %--------------------------------------------------------------------------------
 % completely erase second node											
-removed(C2, Fact, S)	:-	do_action(action(data(N1, C1, C2, Sum), addCommTerms), S),
+removed(C2, Fact, S)	:-	_selected(action(data(N1, C1, C2, Sum), addCommTerms), S),
 							holds(C2, Fact, S).
 %================================================================================
 %================================================================================
