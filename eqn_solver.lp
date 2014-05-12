@@ -5,7 +5,7 @@
 %
 % NOTE: this file depends on eqn_rule for the rules used to solve an equation!
 
-#const max_steps = 1. % max number of actions until a solution is reached
+#const max_steps = 3. % max number of actions until a solution is reached
 step(0..max_steps). 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%% INITIAL EQN FACTS %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -101,6 +101,26 @@ actionforStep(S) :- _selected(Action,S).
 % later, can project on action occuring at a particular time step: action(Name, Step)
 action(Name) :- _selected(action(X,Name), S).
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% AN EQN IS SOLVED %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+_contradiction	:- 	step(S), 
+					holds(1, field(nodeCoef,A), S),
+					holds(1, field(nodeDeg, 0), S),
+					holds(2, field(nodeCoef,B), S),
+					holds(2, field(nodeDeg, 0), S),
+					A != B.
+					
+
+_solved :- step(S), 
+		holds(1, field(nodeCoef,1), S),
+		holds(1, field(nodeDeg, 1), S),
+		holds(1, field(side, left), S),
+		holds(2, field(nodeDeg, 0), S),
+		holds(2, field(side, right), S).
+
+:- not _solved.
+:- _contradiction.
+%const(ID) :- type(ID, mono), nodeDeg(ID, 0) .
+%:- 3 {const(ID) : node(ID) } .
 
 
 % TODO: remove this is just for testing:
