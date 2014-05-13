@@ -63,3 +63,41 @@ update(Frac1, field(nodeOper, add), S) 	:-	_selected(action(data(Plus, Frac1, De
 inheritFrom(Denom1, Num2, S) 			:-	_selected(action(data(Plus, Frac1, Denom1, Frac2, Num2), addFracSameDenom), S).
 %================================================================================
 %================================================================================
+
+
+
+%================================================================================
+% FracMult: (A/B)*(C/D) --> (A*C)/(B*D)
+%================================================================================
+% 						### RULE CONDITIONS ###
+% There's a mult node with two div nodes as children
+possible(action(data(Root, Frac1, Frac2), fracMult), S) 	:- 	holds(Root, field(nodeOper,mul), S),
+											holds(Root, field(parentOf,Frac1), S),
+											holds(Root, field(parentOf,Frac2), S),
+											Frac1 < Frac2,
+											holds(Frac1, field(nodeOper,div), S),
+											holds(Frac2, field(nodeOper,div), S).
+
+% 						### APPLYING THE RULE ###
+% make root node a fraction and set its numerator/denominator
+update(Root, field(nodeOper, div), S) 		:-	_selected(action(data(Root, Frac1, Frac2), fracMult), S).
+addFracFields(Root, Frac1, Frac2, S) 		:-	_selected(action(data(Root, Frac1, Frac2), fracMult), S).
+
+% both Fraction nodes become mult nodes
+makeFracToMult(Frac1, S) 		:-	_selected(action(data(Root, Frac1, Frac2), fracMult), S).
+makeFracToMult(Frac2, S) 		:-	_selected(action(data(Root, Frac1, Frac2), fracMult), S).
+
+update(Node, field(nodeOper, mul), S) :- makeFracToMult(Node, S).
+deleteFracFields(Node, S) :- makeFracToMult(Node, S).
+
+% switch 
+% swap the values of the left side numerator and right side denominator
+swapValues(Denom1, Num1, S) :- _selected(action(data(Root, Frac1, Frac2), fracMult), S),
+								holds(Frac1, field(denom, Denom1), S),
+								holds(Frac2, field(numer, Num1), S).
+
+inheritFrom(Node1, Node2, S) :- swapValues(Node1, Node2, S).
+inheritFrom(Node2, Node1, S) :- swapValues(Node1, Node2, S).
+
+%================================================================================
+%================================================================================
