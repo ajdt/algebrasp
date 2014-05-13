@@ -100,16 +100,14 @@ swapValues(Denom1, Num1, S) :- _selected(action(data(Root, Frac1, Frac2), fracMu
 
 
 %================================================================================
-% FracDiv: (A/B)/(C/D) --> (A/B)*(D/C)
+% FracDiv: (A)/(C/D) --> (A)*(D/C)
 %================================================================================
 % 						### RULE CONDITIONS ###
 % There's a mult node with two div nodes as children
-possible(action(data(Root, Frac2), fracDiv), S) :- 	holds(Root, field(nodeOper,div), S),
-													holds(Root, field(parentOf,Frac1), S),
-													holds(Root, field(parentOf,Frac2), S),
-													Frac1 < Frac2,
-													holds(Frac1, field(nodeOper,div), S),
-													holds(Frac2, field(nodeOper,div), S).
+possible(action(data(Root, Frac), fracDiv), S) :- 	holds(Root, field(nodeOper,div), S),
+													holds(Root, field(parentOf,Frac), S),
+													holds(Root, field(denom, Frac), S),
+													holds(Frac, field(nodeOper,div), S).
 
 % 						### APPLYING THE RULE ###
 % make root node a mult node remove its numerator/denominator
