@@ -83,6 +83,29 @@ inheritFromAndDelete(Parent, SecondKid, S)		:-	shrinkSubtree(Parent, ToRemove, S
 inheritFrom(Parent, SecondKid, S)				:- inheritFromAndDelete(Parent, SecondKid, S).
 deleteChild(Parent, SecondKid, S) 				:- inheritFromAndDelete(Parent, SecondKid, S).
 
+% 						### SHRINK SUBTREE, USE NEW VALUE
+%--------------------------------------------------------------------------------
+% When an operation is done on child1 and Child2 to yield the fields NewValue has,
+% and we wish to replace Child1 and Child2 with NewValue.
+% 
+
+deleteChild(Parent, Child2, S) 					:- contractNodes(Parent, Child1, Child2, NewValue, S).
+							
+% if have more than two kids, then just decrement num kids and replace Child1 with newValue
+update(Parent, field(numChildren,Kids - 1), S)	:- contractNodes(Parent, Child1, Child2, NewValue, S),
+													holds(Parent, field(numChildren,Kids), S), Kids > 2.
+inheritFromAndDelete(Child1, NewValue, S)		:- contractNodes(Parent, Child1, Child2, NewValue, S),
+													holds(Parent, field(numChildren,Kids), S), Kids > 2.
+
+% if exactly two kids, then delete Child1 too
+deleteChild(Parent, Child1, S) 					:- contractNodes(Parent, Child1, Child2, NewValue, S),
+													holds(Parent, field(numChildren,2), S).
+inheritFromAndDelete(Parent, NewValue, S)		:- contractNodes(Parent, Child1, Child2, NewValue, S),
+													holds(Parent, field(numChildren,2), S).
+
+inheritFrom(Parent, SecondKid, S)				:- inheritFromAndDelete(Parent, SecondKid, S).
+deleteChild(Parent, SecondKid, S) 				:- inheritFromAndDelete(Parent, SecondKid, S).
+
 % 						### REMOVING A SINGLE FIELD
 %--------------------------------------------------------------------------------
 removed(ID, field(fieldName, Value), S) :- deleteField(ID, fieldName, S), holds(ID, field(fieldName, Value), S).
