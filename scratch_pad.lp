@@ -8,7 +8,7 @@
 % this is where I'll be testing new rules to add to the solver
 
 %================================================================================
-% AddfracDiffDenom: A/B + C/B--> (A+C)/B
+% AddfracDiffDenom: A/B + C/D--> (AD+BC)/BD
 %================================================================================
 % 						### RULE CONDITIONS ###
 % NOTE: requires that both denominators be monomials: change this later to be more general!
@@ -39,8 +39,7 @@ inheritFrom(Num2, Denom1, S) :- makeRightMult(Frac2, Denom1, Num2, S).
 % make the left side a sum over products of four terms
 makeSumOf(Frac1, Num1, Denom1, Num2, Denom2, S) :- _selected(action(data(Plus, Frac1, Frac2, frac1(Num1, Denom1), frac2(Num2, Denom2)), addFracDiffDenom), S).
 update(Frac1, field(nodeOper, add), S) :- makeSumOf(Frac1, Num1, Denom1, Num2, Denom2, S).
-removed(Frac1, field(numer, Num1), S) :- makeSumOf(Frac1, Num1, Denom1, Num2, Denom2, S).
-removed(Frac1, field(denom, Denom1), S) :- makeSumOf(Frac1, Num1, Denom1, Num2, Denom2, S).
+deleteFracFields(Frac1, S) :- makeSumOf(Frac1, Num1, Denom1, Num2, Denom2, S).
 
 % convert old leaves to mul nodes
 convertToOperWithKids(Num1, mul, 2, S) :- makeSumOf(Frac1, Num1, Denom1, Num2, Denom2, S).
@@ -51,34 +50,5 @@ inheritFrom(Num1*max_terms + 1, Num1, S) :- makeSumOf(Frac1, Num1, Denom1, Num2,
 inheritFrom(Num1*max_terms + 2, Denom2, S) :- makeSumOf(Frac1, Num1, Denom1, Num2, Denom2, S).
 inheritFrom(Denom1*max_terms + 1, Denom1, S) :- makeSumOf(Frac1, Num1, Denom1, Num2, Denom2, S).
 inheritFrom(Denom1*max_terms + 2, Num2, S) :- makeSumOf(Frac1, Num1, Denom1, Num2, Denom2, S).
-
-
-
-
-% helpers to use later
-removed(ID, field(fieldName, Value), S) :- deleteField(ID, fieldName, S), holds(ID, field(fieldName, Value), S).
-% deleting and adding fraction fields
-deleteField(ID, numer, S) :- deleteFracFields(ID,S).
-deleteField(ID, denom, S) :- deleteFracFields(ID,S).
-
-assigned(ID, field(numer, Num), S) :- addFracFields(ID, Num, Denom, S).
-assigned(ID, field(denom, Denom), S) :- addFracFields(ID, Num, Denom, S).
-
-% convert a monomial node to an operator node, and give it children
-% ... conversion part
-delete(ID, S) 									:-	convertToOperWithKids(ID, Oper, NumKids, S).
-assigned(ID, field(type, poly), S) 				:-	convertToOperWithKids(ID, Oper, NumKids, S).
-assigned(ID, field(nodeOper, Oper), S) 			:-	convertToOperWithKids(ID, Oper, NumKids, S).
-assigned(ID, field(numChildren, NumKids), S) 	:-	convertToOperWithKids(ID, Oper, NumKids, S).
-assigned(ID, field(side, Side), S) 				:-	convertToOperWithKids(ID, Oper, NumKids, S), holds(ID, field(side, Side), S).
-makeChildrenFor(ID, NumKids, S) 				:-	convertToOperWithKids(ID, Oper, NumKids, S).
-
-% ... child creation part
-% NOTE: does not fill in any field data for the children
-newKidOnTheBlock(ID, ID*max_terms + KidNum, S) :- makeChildrenFor(ID, NumKids, S), KidNum = 1..NumKids .
-assigned(Parent, field(parentOf, KidID), S) :- newKidOnTheBlock(Parent, KidID, S).
-
-
-
 %================================================================================
 %================================================================================
