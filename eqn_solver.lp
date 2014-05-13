@@ -83,28 +83,34 @@ inheritFromAndDelete(Parent, SecondKid, S)		:-	shrinkSubtree(Parent, ToRemove, S
 inheritFrom(Parent, SecondKid, S)				:- inheritFromAndDelete(Parent, SecondKid, S).
 deleteChild(Parent, SecondKid, S) 				:- inheritFromAndDelete(Parent, SecondKid, S).
 
-% helpers to use later
+% 						### REMOVING A SINGLE FIELD
+%--------------------------------------------------------------------------------
 removed(ID, field(fieldName, Value), S) :- deleteField(ID, fieldName, S), holds(ID, field(fieldName, Value), S).
-% deleting and adding fraction fields
-deleteField(ID, numer, S) :- deleteFracFields(ID,S).
-deleteField(ID, denom, S) :- deleteFracFields(ID,S).
 
-assigned(ID, field(numer, Num), S) :- addFracFields(ID, Num, Denom, S).
-assigned(ID, field(denom, Denom), S) :- addFracFields(ID, Num, Denom, S).
+% 						### REMOVING/ADDING numer/denom FIELDS
+%--------------------------------------------------------------------------------
+deleteField(ID, numer, S) 				:- deleteFracFields(ID,S).
+deleteField(ID, denom, S) 				:- deleteFracFields(ID,S).
 
-% convert a monomial node to an operator node, and give it children
+assigned(ID, field(numer, Num), S)		:- addFracFields(ID, Num, Denom, S).
+assigned(ID, field(denom, Denom), S) 	:- addFracFields(ID, Num, Denom, S).
+
+% 						### CONVERT MONOMIAL TO OPERATOR NODE AND ADD CHILDREN
+%--------------------------------------------------------------------------------
 % ... conversion part
-delete(ID, S) 									:-	convertToOperWithKids(ID, Oper, NumKids, S).
-assigned(ID, field(type, poly), S) 				:-	convertToOperWithKids(ID, Oper, NumKids, S).
+delete(ID, S) 									:-	convertToOperWithKids(ID, Oper, NumKids, S).	% delete old fields
+assigned(ID, field(type, poly), S) 				:-	convertToOperWithKids(ID, Oper, NumKids, S).	% new fields
 assigned(ID, field(nodeOper, Oper), S) 			:-	convertToOperWithKids(ID, Oper, NumKids, S).
 assigned(ID, field(numChildren, NumKids), S) 	:-	convertToOperWithKids(ID, Oper, NumKids, S).
-assigned(ID, field(side, Side), S) 				:-	convertToOperWithKids(ID, Oper, NumKids, S), holds(ID, field(side, Side), S).
+assigned(ID, field(side, Side), S) 				:-	convertToOperWithKids(ID, Oper, NumKids, S), 
+													holds(ID, field(side, Side), S).
 makeChildrenFor(ID, NumKids, S) 				:-	convertToOperWithKids(ID, Oper, NumKids, S).
 
 % ... child creation part
-% NOTE: does not fill in any field data for the children
+% 		NOTE: does not fill in any field data for the children
 newKidOnTheBlock(ID, ID*max_terms + KidNum, S) :- makeChildrenFor(ID, NumKids, S), KidNum = 1..NumKids .
 assigned(Parent, field(parentOf, KidID), S) :- newKidOnTheBlock(Parent, KidID, S).
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%% RULE SELECTION %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % possible actions:
 %	each possible action is valid at a particular point in time
