@@ -61,6 +61,12 @@ delete(ToDelete, S)								:-	deleteChild(Parent, ToDelete, S).
 removed(Parent, fact(parentOf, ToDelete), S)	:-	deleteChild(Parent, ToDelete, S).
 									
 
+% 						### SWAPPING NODE VALUES
+%--------------------------------------------------------------------------------
+% each node will inherit from the other 
+inheritFrom(Node1, Node2, S) :- swapValues(Node1, Node2, S).
+inheritFrom(Node2, Node1, S) :- swapValues(Node1, Node2, S).
+
 % 						### REMOVING NODE FROM SUBTREE
 %--------------------------------------------------------------------------------
 % shrinking a subtree by one node!

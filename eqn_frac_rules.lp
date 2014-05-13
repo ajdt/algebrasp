@@ -95,9 +95,30 @@ deleteFracFields(Node, S) :- makeFracToMult(Node, S).
 swapValues(Denom1, Num1, S) :- _selected(action(data(Root, Frac1, Frac2), fracMult), S),
 								holds(Frac1, field(denom, Denom1), S),
 								holds(Frac2, field(numer, Num1), S).
+%================================================================================
+%================================================================================
 
-inheritFrom(Node1, Node2, S) :- swapValues(Node1, Node2, S).
-inheritFrom(Node2, Node1, S) :- swapValues(Node1, Node2, S).
 
+%================================================================================
+% FracDiv: (A/B)/(C/D) --> (A/B)*(D/C)
+%================================================================================
+% 						### RULE CONDITIONS ###
+% There's a mult node with two div nodes as children
+possible(action(data(Root, Frac2), fracDiv), S) :- 	holds(Root, field(nodeOper,div), S),
+													holds(Root, field(parentOf,Frac1), S),
+													holds(Root, field(parentOf,Frac2), S),
+													Frac1 < Frac2,
+													holds(Frac1, field(nodeOper,div), S),
+													holds(Frac2, field(nodeOper,div), S).
+
+% 						### APPLYING THE RULE ###
+% make root node a mult node remove its numerator/denominator
+update(Root, field(nodeOper, mul), S) 		:-	_selected(action(data(Root, Frac), fracDiv), S).
+deleteFracFields(Root, S) 					:-	_selected(action(data(Root, Frac), fracDiv), S).
+
+% swap the numer and denom of right side fraction
+swapValues(Num, Denom, S) 					:-	_selected(action(data(Root, Frac), fracDiv), S),
+												holds(Frac, field(numer, Num), S),
+												holds(Frac, field(denom, Denom), S).
 %================================================================================
 %================================================================================
