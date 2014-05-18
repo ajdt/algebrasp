@@ -25,20 +25,20 @@ sameCoef(N1, N2, S) :- holds(N1, field(nodeCoef, Coef), S), holds(N2, field(node
 %================================================================================
 % 						### RULE CONDITIONS ###
 % there's an add poly node with two children that are monomials of the same degree
-possible(action(data(N1, C1, C2, Coef1+Coef2), addCommTerms), S) 	:- 	holds(N1, field(nodeOper,add), S),
-											holds(N1, field(parentOf,C1), S),
-											holds(N1, field(parentOf,C2), S),
-											sameDeg(C1, C2, S),
-											holds(C1, field(nodeCoef,Coef1), S),
-											holds(C2, field(nodeCoef,Coef2), S),
-											C1 != C2.
+possible(action(data(N1, C1, C2), addCommTerms), S) 	:- 	holds(N1, field(nodeOper,add), S),
+															holds(N1, field(parentOf,C1), S),
+															holds(N1, field(parentOf,C2), S),
+															sameDeg(C1, C2, S),
+															C1 != C2.
 % 						### APPLYING THE RULE ###
 % 						### CASE 1: parent node has more than 2 children ###
 % add the two nodes together
-update(C1, field(nodeCoef,Sum), S) 			:-	_selected(action(data(N1, C1, C2, Sum), addCommTerms), S),
-												holds(N1, field(numChildren,Kids), S), Kids > 2.
+update(C1, field(nodeCoef,Coef1 + Coef2), S) 	:-	_selected(action(data(N1, C1, C2), addCommTerms), S),
+													holds(N1, field(numChildren,Kids), S), Kids > 2,
+													holds(C1, field(nodeCoef, Coef1), S),
+													holds(C2, field(nodeCoef, Coef2), S).
 % decrement number of children
-update(N1, field(numChildren,Kids - 1), S) 	:-	_selected(action(data(N1, C1, C2, Sum), addCommTerms), S),
+update(N1, field(numChildren,Kids - 1), S) 	:-	_selected(action(data(N1, C1, C2), addCommTerms), S),
 												holds(N1, field(numChildren,Kids), S), Kids > 2.
 
 % 						### CASE 2: parent node has exactly 2 children ###
@@ -46,24 +46,26 @@ update(N1, field(numChildren,Kids - 1), S) 	:-	_selected(action(data(N1, C1, C2,
 % 								so parent node becomes monomial.
 % NOTE: cannot use inheritFrom here b/c coefficient isn't directly inherited. 
 % remove old facts about parent
-delete(N1, S) 							:-	_selected(action(data(N1, C1, C2, Sum), addCommTerms), S),
-											holds(N1, field(numChildren,2), S).
+delete(N1, S) 									:-	_selected(action(data(N1, C1, C2), addCommTerms), S),
+													holds(N1, field(numChildren,2), S).
 % parent ID becomes a monomial, and gains node parameters
-assigned(N1, field(type,mono), S) 		:-	_selected(action(data(N1, C1, C2, Sum), addCommTerms), S),
-											holds(N1, field(numChildren,2), S).
-assigned(N1, field(nodeCoef,Sum), S) 	:-	_selected(action(data(N1, C1, C2, Sum), addCommTerms), S),
-											holds(N1, field(numChildren,2), S).
-assigned(N1, field(nodeDeg,Degree), S) 	:-	_selected(action(data(N1, C1, C2, Sum), addCommTerms), S),
-											holds(N1, field(numChildren,2), S),
-											holds(C1, field(nodeDeg,Degree), S) .
+assigned(N1, field(type,mono), S) 				:-	_selected(action(data(N1, C1, C2), addCommTerms), S),
+													holds(N1, field(numChildren,2), S).
+assigned(N1, field(nodeCoef,Coef1+ Coef2), S) 	:-	_selected(action(data(N1, C1, C2), addCommTerms), S),
+													holds(N1, field(numChildren,2), S),
+													holds(C1, field(nodeCoef, Coef1), S),
+													holds(C2, field(nodeCoef, Coef2), S).
+assigned(N1, field(nodeDeg,Degree), S) 			:-	_selected(action(data(N1, C1, C2), addCommTerms), S),
+													holds(N1, field(numChildren,2), S),
+													holds(C1, field(nodeDeg,Degree), S) .
 % C1 child node is deleted 
-deleteChild(N1, C1, S)					:-	_selected(action(data(N1, C1, C2, Sum), addCommTerms), S),
-											holds(N1, field(numChildren,2), S).
+deleteChild(N1, C1, S)							:-	_selected(action(data(N1, C1, C2), addCommTerms), S),
+													holds(N1, field(numChildren,2), S).
 
 %						### BOTH CASES ###
 %--------------------------------------------------------------------------------
 % completely erase second node											
-deleteChild(N1, C2)		:-	_selected(action(data(N1, C1, C2, Sum), addCommTerms), S).
+deleteChild(N1, C2)		:-	_selected(action(data(N1, C1, C2), addCommTerms), S).
 %================================================================================
 %================================================================================
 
@@ -76,10 +78,10 @@ deleteChild(N1, C2)		:-	_selected(action(data(N1, C1, C2, Sum), addCommTerms), S
 % there's an add poly node with two children that are monomials, one of them has coef == 0 
 % the only info we remember is the identity of the parent node and the node to remove
 possible(action(data(N1, C1, C2), addIdent), S) 	:- 	holds(N1, field(nodeOper,add), S),
-											holds(N1, field(parentOf,C1), S),
-											holds(N1, field(parentOf,C2), S),
-											holds(C2, field(nodeCoef,0), S),
-											C1 != C2.
+														holds(N1, field(parentOf,C1), S),
+														holds(N1, field(parentOf,C2), S),
+														holds(C2, field(nodeCoef,0), S),
+														C1 != C2.
 % 						### APPLYING THE RULE ###
 % shrink subtree by removing the zero node
 shrinkSubtree(N1, ZeroNode, S)					:-	_selected(action(data(N1, C1, ZeroNode), addIdent), S).
@@ -94,11 +96,11 @@ shrinkSubtree(N1, ZeroNode, S)					:-	_selected(action(data(N1, C1, ZeroNode), a
 % 						### RULE CONDITIONS ###
 % There's a div node with two children that are equal
 possible(action(data(N1, C1, C2), divInverse), S) 	:- 	holds(N1, field(nodeOper,div), S),
-											holds(N1, field(parentOf,C1), S),
-											holds(N1, field(parentOf,C2), S),
-											sameDeg(C1, C2, S),
-											sameCoef(C1, C2, S),
-											C1 != C2.
+														holds(N1, field(parentOf,C1), S),
+														holds(N1, field(parentOf,C2), S),
+														sameDeg(C1, C2, S),
+														sameCoef(C1, C2, S),
+														C1 != C2.
 
 % 						### APPLYING THE RULE ###
 %--------------------------------------------------------------------------------
