@@ -17,6 +17,9 @@ type(one, mono).
 nodeCoef(one,1). 
 nodeDeg(one,0).  
 
+% move these to solver later
+sameDeg(N1, N2, S) :- holds(N1, field(nodeDeg, Deg), S), holds(N2, field(nodeDeg, Deg), S).
+sameCoef(N1, N2, S) :- holds(N1, field(nodeCoef, Coef), S), holds(N2, field(nodeCoef, Coef), S).
 %================================================================================
 % addCommonTerms: a*x^b + c*x^b ----> (a+c)*x^b, 2 Cases
 %================================================================================
@@ -25,12 +28,9 @@ nodeDeg(one,0).
 possible(action(data(N1, C1, C2, Coef1+Coef2), addCommTerms), S) 	:- 	holds(N1, field(nodeOper,add), S),
 											holds(N1, field(parentOf,C1), S),
 											holds(N1, field(parentOf,C2), S),
-											holds(C1, field(nodeDeg,Deg), S),
-											holds(C2, field(nodeDeg,Deg), S),
+											sameDeg(C1, C2, S),
 											holds(C1, field(nodeCoef,Coef1), S),
 											holds(C2, field(nodeCoef,Coef2), S),
-											Coef1 != 0,% remove
-											Coef2 != 0,% remove
 											C1 != C2.
 % 						### APPLYING THE RULE ###
 % 						### CASE 1: parent node has more than 2 children ###
@@ -78,7 +78,6 @@ deleteChild(N1, C2)		:-	_selected(action(data(N1, C1, C2, Sum), addCommTerms), S
 possible(action(data(N1, C1, C2), addIdent), S) 	:- 	holds(N1, field(nodeOper,add), S),
 											holds(N1, field(parentOf,C1), S),
 											holds(N1, field(parentOf,C2), S),
-											holds(C1, field(nodeCoef,Coef1), S),
 											holds(C2, field(nodeCoef,0), S),
 											C1 != C2.
 % 						### APPLYING THE RULE ###
@@ -97,10 +96,8 @@ shrinkSubtree(N1, ZeroNode, S)					:-	_selected(action(data(N1, C1, ZeroNode), a
 possible(action(data(N1, C1, C2), divInverse), S) 	:- 	holds(N1, field(nodeOper,div), S),
 											holds(N1, field(parentOf,C1), S),
 											holds(N1, field(parentOf,C2), S),
-											holds(C1, field(nodeCoef,Coef), S),
-											holds(C2, field(nodeCoef,Coef), S),
-											holds(C1, field(nodeDeg,Deg), S),
-											holds(C2, field(nodeDeg,Deg), S),
+											sameDeg(C1, C2, S),
+											sameCoef(C1, C2, S),
 											C1 != C2.
 
 % 						### APPLYING THE RULE ###
@@ -127,7 +124,6 @@ deleteChild(N1, C2, S) 					:-	_selected(action(data(N1, C1, C2), divInverse), S
 possible(action(data(N1, C1, C2), multIdent), S) 	:- 	holds(N1, field(nodeOper,mul), S),
 											holds(N1, field(parentOf,C1), S),
 											holds(N1, field(parentOf,C2), S),
-											holds(C1, field(nodeCoef,Coef), S),
 											holds(C2, field(nodeCoef,1), S),
 											holds(C2, field(nodeDeg,0), S),
 											C1 != C2.
