@@ -20,6 +20,8 @@ nodeDeg(one,0).
 % move these to solver later
 sameDeg(N1, N2, S) :- holds(N1, field(nodeDeg, Deg), S), holds(N2, field(nodeDeg, Deg), S).
 sameCoef(N1, N2, S) :- holds(N1, field(nodeCoef, Coef), S), holds(N2, field(nodeCoef, Coef), S).
+sumCoef(N1, N2, Coef1+Coef2, S) :- holds(N1, field(nodeCoef, Coef1), S), holds(N2, field(nodeCoef, Coef2), S).
+
 %================================================================================
 % addCommonTerms: a*x^b + c*x^b ----> (a+c)*x^b, 2 Cases
 %================================================================================
@@ -33,10 +35,9 @@ possible(action(data(N1, C1, C2), addCommTerms), S) 	:- 	holds(N1, field(nodeOpe
 % 						### APPLYING THE RULE ###
 % 						### CASE 1: parent node has more than 2 children ###
 % add the two nodes together
-update(C1, field(nodeCoef,Coef1 + Coef2), S) 	:-	_selected(action(data(N1, C1, C2), addCommTerms), S),
+update(C1, field(nodeCoef,Sum), S) 	:-	_selected(action(data(N1, C1, C2), addCommTerms), S),
 													holds(N1, field(numChildren,Kids), S), Kids > 2,
-													holds(C1, field(nodeCoef, Coef1), S),
-													holds(C2, field(nodeCoef, Coef2), S).
+													sumCoef(C1, C2, Sum, S).
 % decrement number of children
 update(N1, field(numChildren,Kids - 1), S) 	:-	_selected(action(data(N1, C1, C2), addCommTerms), S),
 												holds(N1, field(numChildren,Kids), S), Kids > 2.
@@ -51,10 +52,9 @@ delete(N1, S) 									:-	_selected(action(data(N1, C1, C2), addCommTerms), S),
 % parent ID becomes a monomial, and gains node parameters
 assigned(N1, field(type,mono), S) 				:-	_selected(action(data(N1, C1, C2), addCommTerms), S),
 													holds(N1, field(numChildren,2), S).
-assigned(N1, field(nodeCoef,Coef1+ Coef2), S) 	:-	_selected(action(data(N1, C1, C2), addCommTerms), S),
+assigned(N1, field(nodeCoef,Sum), S) 	:-	_selected(action(data(N1, C1, C2), addCommTerms), S),
 													holds(N1, field(numChildren,2), S),
-													holds(C1, field(nodeCoef, Coef1), S),
-													holds(C2, field(nodeCoef, Coef2), S).
+													sumCoef(C1, C2, Sum, S).
 assigned(N1, field(nodeDeg,Degree), S) 			:-	_selected(action(data(N1, C1, C2), addCommTerms), S),
 													holds(N1, field(numChildren,2), S),
 													holds(C1, field(nodeDeg,Degree), S) .
