@@ -60,16 +60,23 @@ convertToOperWithKids(Mono, mul, 2, S)	:-	_selected(action(data(Mono, C1, C2), f
 inheritFrom(Child2, Mono, S) 			:- createRHS(Child2, Mono, S).
 convertToOperWithKids(Mono, add, 2, S) 	:- createRHS(Child2, Mono, S).
 
-inheritFrom(Child1, C1, S)	:-	_selected(action(data(Mono, C1, C2), factorMonom), S),
+createMono(Child1, C1, Deg, S)	:-	_selected(action(data(Mono, C1, C2), factorMonom), S),
+									holds(Mono, field(nodeDeg, Deg), S),
+									degree(Deg),
 									newKidOnTheBlock(Mono, Child1, S),
 									newKidOnTheBlock(Mono, Child2, S),
 									Child1 < Child2.
 
-inheritFrom(Child2, C2, S)	:-	_selected(action(data(Mono, C1, C2), factorMonom), S),
+createMono(Child2, C2, Deg, S)	:-	_selected(action(data(Mono, C1, C2), factorMonom), S),
+									holds(Mono, field(nodeDeg, Deg), S),
+									degree(Deg),
 									newKidOnTheBlock(Mono, Child1, S),
 									newKidOnTheBlock(Mono, Child2, S),
 									Child1 < Child2.
-											
+
+assigned(ID, field(type, mono), Step)		:-	createMono(ID, Value, Deg, Step).
+assigned(ID, field(nodeCoef, Value), Step)	:-	createMono(ID, Value, Deg, Step).
+assigned(ID, field(nodeDeg, Deg), Step)		:-	createMono(ID, Value, Deg, Step).
 
 %================================================================================
 %================================================================================
