@@ -35,15 +35,7 @@ contractNodes(Root, Mono1, Mono2, temp, S) :-	_selected(action(data(Root, Mono1,
 %================================================================================
 %================================================================================
 
-
-sameDeg(N1, N2, S) 	:- 	holds(N1, field(nodeDeg, Deg), S), 
-						holds(N2, field(nodeDeg, Deg), S),
-						degree(Deg).
-sameCoef(N1, N2, S) :- holds(N1, field(nodeCoef, Coef), S), holds(N2, field(nodeCoef, Coef), S), coeffValue(Coef).
 % first approximation, works for monomials only
-equalMonom(C1, C2, S)	:-	step(S),
-							sameCoef(C1, C2, S),
-							sameDeg(C1, C2, S).
 %================================================================================
 % factor: A*B + C*B --> (A+C)*B
 %================================================================================
