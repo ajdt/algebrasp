@@ -47,45 +47,50 @@
 % where r + q = p
 %================================================================================
 % 						### RULE CONDITIONS ###
+
+% select any monomial
 possible(action(data(Mono), factorMonom), S) 	:- 	holds(Mono, field(type,mono), S),
-																node(Mono),
-																step(S).
+													node(Mono),
+													step(S).
 
 
 % 						### APPLYING THE RULE ###
+
+% convert monomial to mul operator with 2 children
 convertToOperWithKids(Mono, mul, 2, S)	:-	_selected(action(data(Mono), factorMonom), S).
 
-1 { degAsSum(Mono, D1, D2, S) 
+% partition Monomial's coef into a product of two other coeffs, 
+% and degree as sum of two other degrees
+1 { degSumPartition(Mono, D1, D2, S) 
 			:	degree(D1),
 				degree(D2),
 				holds(Mono, field(nodeDeg, D1 + D2), S)
 } 1		:-	_selected(action(data(Mono), factorMonom), S).
 										
-1 { coefAsProd(Mono, C1, C2, S) 
+1 { coefProdPartition(Mono, C1, C2, S) 
 			:	coeffValue(C1), 
 				coeffValue(C2), 
 				holds(Mono, field(nodeCoef, C1*C2), S) 
 } 1		:-	_selected(action(data(Mono), factorMonom), S).
 
-
-_createMonoDeg(Child1, D1, S; Child2, D2, S)	:-		_selected(action(data(Mono), factorMonom), S),
-													degAsSum(Mono, D1, D2, S),
+% create child monomials based on above partitions
+% NOTE: converToOperWithKids creates the child nodes, but doesn't assign fields/values
+assigned(Child1, field(nodeDeg, D1), S ; 
+		 Child2, field(nodeDeg, D2), S)			:-	_selected(action(data(Mono), factorMonom), S),
+													degSumPartition(Mono, D1, D2, S),
 													newKidOnTheBlock(Mono, Child1, S),
 													newKidOnTheBlock(Mono, Child2, S),
 													Child1 < Child2.
 
-_createMonoCoef(Child1, C1, S; Child2, C2, S)	:-	_selected(action(data(Mono), factorMonom), S),
-													coefAsProd(Mono, C1, C2, S),
+assigned(Child1, field(nodeCeof,C1), S ; 
+		Child2, field(nodeCeof,C2), S)			:-	_selected(action(data(Mono), factorMonom), S),
+													coefProdPartition(Mono, C1, C2, S),
 													newKidOnTheBlock(Mono, Child1, S),
 													newKidOnTheBlock(Mono, Child2, S),
 													Child1 < Child2.
 
-assigned(Node, field(type, mono), S)	:-	_createMonoDeg(Node, Deg, S).
-assigned(Node, field(nodeDeg, Deg), Step)		:- _createMonoDeg(Node, Deg, Step).
-assigned(Node, field(nodeCoef, Coef), Step)	:- _createMonoCoef(Node, Coef, Step).
-
-% for testing only. Remove later
-_coefAsProd(X,Y,Z,W) :- coefAsProd(X,Y,Z,W).
+assigned(Child, field(type, mono), S)			:-	_selected(action(data(Mono), factorMonom), S),
+													newKidOnTheBlock(Mono, Child, S).
 
 %================================================================================
 %================================================================================
