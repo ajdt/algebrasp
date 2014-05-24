@@ -9,9 +9,13 @@ possible(action(data(MulNode, Mono1, Mono2), multMonom), S) 	:- 	holds(MulNode, 
 																	holds(MulNode, field(parentOf,Mono2), S),
 																	holds(Mono1, field(type,mono), S),
 																	holds(Mono2, field(type,mono), S),
-																	MulNode < Mono1,
-																	MulNode < Mono2,
-																	Mono1 < Mono2,
+													% conditions to limit grounding
+													holds(MulNode, field(numChildren, Kids), S),
+													Mono1 > MulNode*max_terms,
+													Mono2 > MulNode*max_terms,
+													Mono1 <= MulNode*max_terms + Kids ,
+													Mono2 <= MulNode*max_terms + Kids,
+													Mono1 < Mono2,
 																	node(MulNode),
 																	node(Mono1),
 																	node(Mono2),
@@ -75,6 +79,13 @@ possible(action(data(SumNode, Prod1, Prod2), factor), S) 	:- 	holds(SumNode, fie
 																node(Prod1),
 																node(Prod2),
 																node(SumNode),
+													% conditions to limit grounding
+													holds(SumNode, field(numChildren, Kids), S),
+													Prod1 > SumNode*max_terms,
+													Prod2 > SumNode*max_terms,
+													Prod1 <= SumNode*max_terms + Kids ,
+													Prod2 <= SumNode*max_terms + Kids,
+													Prod1 < Prod2,
 																Prod1 < Prod2.
 
 % 						### APPLYING THE RULE ###

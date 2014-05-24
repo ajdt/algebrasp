@@ -10,11 +10,18 @@ possible(action(data(Root, Sum, Mono), distribute), S) 	:- 	holds(Root, field(no
 																holds(Mono, field(type, mono), S),
 																holds(Sum, field(parentOf, A), S),
 																holds(Sum, field(parentOf, C), S),
-																holds(A, field(type, mono), S),
 																Sum < Mono, % TODO: write this as generalized lhs and rhs
 																node(Mono),
 																node(Sum),
 																node(Root),
+													% conditions to limit grounding
+													holds(Root, field(numChildren, Kids), S),
+													Sum > Root*max_terms,
+													Mono > Root*max_terms,
+													Sum <= Root*max_terms + Kids ,
+													Mono <= Root*max_terms + Kids,
+													Sum < Mono,
+																holds(A, field(type, mono), S),
 																holds(C, field(type, mono), S).
 
 % 						### APPLYING THE RULE ###
