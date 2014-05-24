@@ -1,5 +1,5 @@
 %================================================================================
-% multMonom: a*x^b * c*x^d ----> (a+c)*x^(b+d)
+% multMonom: a*x^b * c*x^d ----> (a*c)*x^(b+d)
 %================================================================================
 % 						### RULE CONDITIONS ###
 
@@ -9,6 +9,9 @@ possible(action(data(MulNode, Mono1, Mono2), multMonom), S) 	:- 	holds(MulNode, 
 																	holds(MulNode, field(parentOf,Mono2), S),
 																	holds(Mono1, field(type,mono), S),
 																	holds(Mono2, field(type,mono), S),
+																	MulNode < Mono1,
+																	MulNode < Mono2,
+																	Mono1 < Mono2,
 																	node(MulNode),
 																	node(Mono1),
 																	node(Mono2),
@@ -28,8 +31,17 @@ _makeTempField(field(nodeDeg, SumDeg), S)		:-	_selected(action(data(MulNode, Mon
 													SumDeg = D1 + D2.
 
 _makeTempField(field(nodeCoef, ProdCoef), S)	:-	_selected(action(data(MulNode, Mono1, Mono2), multMonom), S),
+													holds(MulNode, field(parentOf, Mono1), S),
+													holds(MulNode, field(parentOf, Mono2), S),
 													holds(Mono1, field(nodeCoef, C1), S),
 													holds(Mono2, field(nodeCoef, C2), S),
+													% conditions to limit grounding
+													holds(MulNode, field(numChildren, Kids), S),
+													Mono1 > MulNode*max_terms,
+													Mono2 > MulNode*max_terms,
+													Mono1 <= MulNode*max_terms + Kids ,
+													Mono2 <= MulNode*max_terms + Kids,
+													Mono1 < Mono2,
 													coeffValue(C1),
 													coeffValue(C2),
 													node(MulNode),
