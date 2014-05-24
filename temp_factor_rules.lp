@@ -12,6 +12,9 @@ possible(action(data(Root, Sum, Mono), distribute), S) 	:- 	holds(Root, field(no
 																holds(Sum, field(parentOf, C), S),
 																holds(A, field(type, mono), S),
 																Sum < Mono, % TODO: write this as generalized lhs and rhs
+																node(Mono),
+																node(Sum),
+																node(Root),
 																holds(C, field(type, mono), S).
 
 % 						### APPLYING THE RULE ###

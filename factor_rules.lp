@@ -9,6 +9,9 @@ possible(action(data(MulNode, Mono1, Mono2), multMonom), S) 	:- 	holds(MulNode, 
 																	holds(MulNode, field(parentOf,Mono2), S),
 																	holds(Mono1, field(type,mono), S),
 																	holds(Mono2, field(type,mono), S),
+																	node(MulNode),
+																	node(Mono1),
+																	node(Mono2),
 																	Mono1 != Mono2.
 % 						### APPLYING THE RULE ###
 % create a temp node to represent the product of monomials.
@@ -57,6 +60,9 @@ possible(action(data(SumNode, Prod1, Prod2), factor), S) 	:- 	holds(SumNode, fie
 																holds(Prod1, field(parentOf, CommonTerm1), S),
 																holds(Prod2, field(parentOf, CommonTerm2), S),
 																equalMonom(CommonTerm1, CommonTerm2, S),
+																node(Prod1),
+																node(Prod2),
+																node(SumNode),
 																Prod1 < Prod2.
 
 % 						### APPLYING THE RULE ###
