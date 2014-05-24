@@ -43,32 +43,30 @@ contractNodes(MulNode, Mono1, Mono2, temp, S)	:-	_selected(action(data(MulNode, 
 % factor: A*B + C*B --> (A+C)*B
 %================================================================================
 % 						### RULE CONDITIONS ###
-possible(action(data(Root, Prod1, Prod2), factor), S) 	:- 	holds(Root, field(nodeOper,add), S),
-																holds(Root, field(parentOf,Prod1), S),
-																holds(Root, field(parentOf,Prod2), S),
+possible(action(data(SumNode, Prod1, Prod2), factor), S) 	:- 	holds(SumNode, field(nodeOper,add), S),
+																holds(SumNode, field(parentOf,Prod1), S),
+																holds(SumNode, field(parentOf,Prod2), S),
 																holds(Prod1, field(nodeOper, mul), S),
 																holds(Prod2, field(nodeOper, mul), S),
-																holds(Prod1, field(parentOf, B1), S),
-																holds(Prod2, field(parentOf, B2), S),
-																equalMonom(B1, B2, S),
+																holds(Prod1, field(parentOf, CommonTerm1), S),
+																holds(Prod2, field(parentOf, CommonTerm2), S),
+																equalMonom(CommonTerm1, CommonTerm2, S),
 																Prod1 < Prod2.
 
 % 						### APPLYING THE RULE ###
-update(Root, field(nodeOper, mul),S)	:-	_selected(action(data(Root, Prod1, Prod2), factor), S).
-update(Prod1, field(nodeOper, add),S)	:-	_selected(action(data(Root, Prod1, Prod2), factor), S).
+update(SumNode, field(nodeOper, mul),S)	:-	_selected(action(data(SumNode, Prod1, Prod2), factor), S).
+update(Prod1, field(nodeOper, add),S)	:-	_selected(action(data(SumNode, Prod1, Prod2), factor), S).
 
 % replace the common term (B above) in Prod1 with the other term (C above) in Prod2
-replaceCommonTerm(B1, C, Prod2, S)	:-	_selected(action(data(Root, Prod1, Prod2), factor), S),
-											holds(Prod1, field(parentOf, B1), S),
-											holds(Prod2, field(parentOf, B2), S),
-											equalMonom(B1, B2, S),
-											holds(Prod2, field(parentOf, C), S),
-											C != B2.
+replaceCommonTerm(CommonTerm1, OtherTerm2, Prod2, S)	:-	_selected(action(data(SumNode, Prod1, Prod2), factor), S),
+															holds(Prod1, field(parentOf, CommonTerm1), S),
+															holds(Prod2, field(parentOf, CommonTerm2), S),
+															equalMonom(CommonTerm1, CommonTerm2, S),
+															holds(Prod2, field(parentOf, OtherTerm2), S),
+															OtherTerm2 != CommonTerm2.
 
 inheritFrom(CommonTerm, OtherTermP2, S)		:-	replaceCommonTerm(CommonTerm, OtherTermP2, Prod2, S).
 shrinkSubtree(Prod2, OtherTermP2, S)		:-	replaceCommonTerm(CommonTerm, OtherTermP2, Prod2, S).
-
-
 %================================================================================
 %================================================================================
 
