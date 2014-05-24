@@ -138,6 +138,8 @@ assigned(Parent, field(parentOf, KidID), S) :- newKidOnTheBlock(Parent, KidID, S
 %--------------------------------------------------------------------------------
 sameDeg(N1, N2, S) 	:- 	holds(N1, field(nodeDeg, Deg), S), 
 						holds(N2, field(nodeDeg, Deg), S),
+						node(N1),
+						node(N2),
 						degree(Deg).
 sameCoef(N1, N2, S) :-	holds(N1, field(nodeCoef, Coef), S), 
 						holds(N2, field(nodeCoef, Coef), S), 
