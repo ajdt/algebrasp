@@ -19,6 +19,9 @@ _makeTempField(field(nodeDeg, SumDeg), S)		:-	_selected(action(data(MulNode, Mon
 													holds(Mono2, field(nodeDeg, D2), S),
 													degree(D1),
 													degree(D2),
+													node(MulNode),
+													node(Mono1),
+													node(Mono2),
 													SumDeg = D1 + D2.
 
 _makeTempField(field(nodeCoef, ProdCoef), S)	:-	_selected(action(data(MulNode, Mono1, Mono2), multMonom), S),
@@ -26,6 +29,9 @@ _makeTempField(field(nodeCoef, ProdCoef), S)	:-	_selected(action(data(MulNode, M
 													holds(Mono2, field(nodeCoef, C2), S),
 													coeffValue(C1),
 													coeffValue(C2),
+													node(MulNode),
+													node(Mono1),
+													node(Mono2),
 													ProdCoef = C1 * C2.
 
 % generate type for temp
@@ -70,4 +76,57 @@ shrinkSubtree(Prod2, OtherTermP2, S)		:-	replaceCommonTerm(CommonTerm, OtherTerm
 %================================================================================
 %================================================================================
 
+
+%================================================================================
+% factorMonom: (a*c)*x^p ---> (a*x^q)*(c*x^r)
+% where r + q = p
+%================================================================================
+% 						### RULE CONDITIONS ###
+
+% select any monomial
+possible(action(data(Mono), factorMonom), S) 	:- 	holds(Mono, field(type,mono), S),
+													node(Mono),
+													step(S).
+
+
+% 						### APPLYING THE RULE ###
+
+% convert monomial to mul operator with 2 children
+convertToOperWithKids(Mono, mul, 2, S)	:-	_selected(action(data(Mono), factorMonom), S).
+
+% partition Monomial's coef into a product of two other coeffs, 
+% and degree as sum of two other degrees
+1 { degSumPartition(Mono, D1, D2, S) 
+			:	degree(D1),
+				degree(D2),
+				holds(Mono, field(nodeDeg, D1 + D2), S)
+} 1		:-	_selected(action(data(Mono), factorMonom), S).
+										
+1 { coefProdPartition(Mono, C1, C2, S) 
+			:	coeffValue(C1), 
+				coeffValue(C2), 
+				holds(Mono, field(nodeCoef, C1*C2), S) 
+} 1		:-	_selected(action(data(Mono), factorMonom), S).
+
+% create child monomials based on above partitions
+% NOTE: converToOperWithKids creates the child nodes, but doesn't assign fields/values
+assigned(Child1, field(nodeDeg, D1), S ; 
+		 Child2, field(nodeDeg, D2), S)			:-	_selected(action(data(Mono), factorMonom), S),
+													degSumPartition(Mono, D1, D2, S),
+													newKidOnTheBlock(Mono, Child1, S),
+													newKidOnTheBlock(Mono, Child2, S),
+													Child1 < Child2.
+
+assigned(Child1, field(nodeCoef,C1), S ; 
+		Child2, field(nodeCoef,C2), S)			:-	_selected(action(data(Mono), factorMonom), S),
+													coefProdPartition(Mono, C1, C2, S),
+													newKidOnTheBlock(Mono, Child1, S),
+													newKidOnTheBlock(Mono, Child2, S),
+													Child1 < Child2.
+
+assigned(Child, field(type, mono), S)			:-	_selected(action(data(Mono), factorMonom), S),
+													newKidOnTheBlock(Mono, Child, S).
+
+%================================================================================
+%================================================================================
 

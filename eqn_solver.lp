@@ -139,7 +139,11 @@ assigned(Parent, field(parentOf, KidID), S) :- newKidOnTheBlock(Parent, KidID, S
 sameDeg(N1, N2, S) 	:- 	holds(N1, field(nodeDeg, Deg), S), 
 						holds(N2, field(nodeDeg, Deg), S),
 						degree(Deg).
-sameCoef(N1, N2, S) :- holds(N1, field(nodeCoef, Coef), S), holds(N2, field(nodeCoef, Coef), S), coeffValue(Coef).
+sameCoef(N1, N2, S) :-	holds(N1, field(nodeCoef, Coef), S), 
+						holds(N2, field(nodeCoef, Coef), S), 
+						node(N1),
+						node(N2),
+						coeffValue(Coef).
 equalMonom(C1, C2, S)	:-	step(S),
 							sameCoef(C1, C2, S),
 							sameDeg(C1, C2, S).
