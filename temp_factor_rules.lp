@@ -43,40 +43,49 @@
 
 
 %================================================================================
-% factorMonom: (a*c)*x^b ---> (a*x^b)*(c*x^b)
+% factorMonom: (a*c)*x^p ---> (a*x^q)*(c*x^r)
+% where r + q = p
 %================================================================================
 % 						### RULE CONDITIONS ###
-possible(action(data(Mono, C1, C2), factorMonom), S) 	:- 	holds(Mono, field(type,mono), S),
-																holds(Mono, field(nodeCoef, C1 * C2), S),
+possible(action(data(Mono), factorMonom), S) 	:- 	holds(Mono, field(type,mono), S),
 																node(Mono),
-																step(S),
-																coeffValue(C1),
-																coeffValue(C2).
+																step(S).
 
 
 % 						### APPLYING THE RULE ###
-convertToOperWithKids(Mono, mul, 2, S)	:-	_selected(action(data(Mono, C1, C2), factorMonom), S).
+convertToOperWithKids(Mono, mul, 2, S)	:-	_selected(action(data(Mono), factorMonom), S).
 
-inheritFrom(Child2, Mono, S) 			:- createRHS(Child2, Mono, S).
-convertToOperWithKids(Mono, add, 2, S) 	:- createRHS(Child2, Mono, S).
+1 { degAsSum(Mono, D1, D2, S) 
+			:	degree(D1),
+				degree(D2),
+				holds(Mono, field(nodeDeg, D1 + D2), S)
+} 1		:-	_selected(action(data(Mono), factorMonom), S).
+										
+1 { coefAsProd(Mono, C1, C2, S) 
+			:	coeffValue(C1), 
+				coeffValue(C2), 
+				holds(Mono, field(nodeCoef, C1*C2), S) 
+} 1		:-	_selected(action(data(Mono), factorMonom), S).
 
-createMono(Child1, C1, Deg, S)	:-	_selected(action(data(Mono, C1, C2), factorMonom), S),
-									holds(Mono, field(nodeDeg, Deg), S),
-									degree(Deg),
-									newKidOnTheBlock(Mono, Child1, S),
-									newKidOnTheBlock(Mono, Child2, S),
-									Child1 < Child2.
 
-createMono(Child2, C2, Deg, S)	:-	_selected(action(data(Mono, C1, C2), factorMonom), S),
-									holds(Mono, field(nodeDeg, Deg), S),
-									degree(Deg),
-									newKidOnTheBlock(Mono, Child1, S),
-									newKidOnTheBlock(Mono, Child2, S),
-									Child1 < Child2.
+_createMonoDeg(Child1, D1, S; Child2, D2, S)	:-		_selected(action(data(Mono), factorMonom), S),
+													degAsSum(Mono, D1, D2, S),
+													newKidOnTheBlock(Mono, Child1, S),
+													newKidOnTheBlock(Mono, Child2, S),
+													Child1 < Child2.
 
-assigned(ID, field(type, mono), Step)		:-	createMono(ID, Value, Deg, Step).
-assigned(ID, field(nodeCoef, Value), Step)	:-	createMono(ID, Value, Deg, Step).
-assigned(ID, field(nodeDeg, Deg), Step)		:-	createMono(ID, Value, Deg, Step).
+_createMonoCoef(Child1, C1, S; Child2, C2, S)	:-	_selected(action(data(Mono), factorMonom), S),
+													coefAsProd(Mono, C1, C2, S),
+													newKidOnTheBlock(Mono, Child1, S),
+													newKidOnTheBlock(Mono, Child2, S),
+													Child1 < Child2.
+
+assigned(Node, field(type, mono), S)	:-	_createMonoDeg(Node, Deg, S).
+assigned(Node, field(nodeDeg, Deg), Step)		:- _createMonoDeg(Node, Deg, Step).
+assigned(Node, field(nodeCoef, Coef), Step)	:- _createMonoCoef(Node, Coef, Step).
+
+% for testing only. Remove later
+_coefAsProd(X,Y,Z,W) :- coefAsProd(X,Y,Z,W).
 
 %================================================================================
 %================================================================================
