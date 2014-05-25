@@ -56,7 +56,16 @@ assigned(N1, field(type,mono), S) 				:-	_selected(action(data(N1, C1, C2), addC
 assigned(N1, field(nodeCoef,Coef1+ Coef2), S) 	:-	_selected(action(data(N1, C1, C2), addCommTerms), S),
 													holds(N1, field(numChildren,2), S),
 													holds(C1, field(nodeCoef, Coef1), S),
-													holds(C2, field(nodeCoef, Coef2), S).
+													holds(C2, field(nodeCoef, Coef2), S),
+													% conditions to limit grounding
+													holds(N1, field(numChildren, Kids), S),
+													C1 > N1*max_terms,
+													C2 > N1*max_terms,
+													C1 <= N1*max_terms + Kids ,
+													C2 <= N1*max_terms + Kids,
+													C1 < C2,
+													coeffValue(Coef1),
+													coeffValue(Coef2).
 assigned(N1, field(nodeDeg,Degree), S) 			:-	_selected(action(data(N1, C1, C2), addCommTerms), S),
 													holds(N1, field(numChildren,2), S),
 													holds(C1, field(nodeDeg,Degree), S) .
