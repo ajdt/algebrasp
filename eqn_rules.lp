@@ -68,7 +68,15 @@ assigned(N1, field(nodeCoef,Coef1+ Coef2), S) 	:-	_selected(action(data(N1, C1, 
 													coeffValue(Coef2).
 assigned(N1, field(nodeDeg,Degree), S) 			:-	_selected(action(data(N1, C1, C2), addCommTerms), S),
 													holds(N1, field(numChildren,2), S),
-													holds(C1, field(nodeDeg,Degree), S) .
+													holds(C1, field(nodeDeg,Degree), S),
+													% conditions to limit grounding
+													holds(N1, field(numChildren, Kids), S),
+													C1 > N1*max_terms,
+													C2 > N1*max_terms,
+													C1 <= N1*max_terms + Kids ,
+													C2 <= N1*max_terms + Kids,
+													C1 < C2,
+													degree(Degree).
 % C1 child node is deleted 
 deleteChild(N1, C1, S)							:-	_selected(action(data(N1, C1, C2), addCommTerms), S),
 													holds(N1, field(numChildren,2), S).
