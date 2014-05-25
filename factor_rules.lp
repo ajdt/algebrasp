@@ -177,14 +177,19 @@ possible(action(data(Root, Sum, Mono), distribute), S) 	:- 	holds(Root, field(no
 																node(Sum),
 																node(Root),
 													% conditions to limit grounding
-													holds(Root, field(numChildren, Kids), S),
 													Sum > Root*max_terms,
 													Mono > Root*max_terms,
-													Sum <= Root*max_terms + Kids ,
-													Mono <= Root*max_terms + Kids,
+													Sum <= Root*max_terms + max_terms ,
+													Mono <= Root*max_terms + max_terms,
 													Sum < Mono,
 																holds(A, field(type, mono), S),
-																holds(C, field(type, mono), S).
+																holds(C, field(type, mono), S),
+													% repeated for Sum node subtree
+													A > Sum*max_terms,
+													C > Sum*max_terms,
+													A <= Sum*max_terms + max_terms ,
+													C <= Sum*max_terms + max_terms,
+													A < C.
 
 % 						### APPLYING THE RULE ###
 update(Root, field(nodeOper, add),S)	:-	_selected(action(data(Root, Sum, Mono), distribute), S).

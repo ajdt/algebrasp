@@ -96,6 +96,13 @@ possible(action(data(N1, C1, C2), addIdent), S) 	:- 	holds(N1, field(nodeOper,ad
 														holds(N1, field(parentOf,C2), S),
 														holds(C2, field(type, mono), S),
 														holds(C2, field(nodeCoef,0), S),
+														node(N1),
+														node(C1),
+														node(C2),
+														C1 > N1*max_terms,
+														C2 > N1*max_terms,
+														C1 <= N1*max_terms + max_terms ,
+														C2 <= N1*max_terms + max_terms,
 														C1 != C2.
 % 						### APPLYING THE RULE ###
 % shrink subtree by removing the zero node
@@ -143,6 +150,13 @@ possible(action(data(N1, C1, C2), multIdent), S) 	:- 	holds(N1, field(nodeOper,m
 											holds(N1, field(parentOf,C2), S),
 											holds(C2, field(nodeCoef,1), S),
 											holds(C2, field(nodeDeg,0), S),
+											node(N1),
+											node(C1),
+											node(C2),
+											C1 > N1*max_terms,
+											C2 > N1*max_terms,
+											C1 <= N1*max_terms + max_terms,
+											C2 <= N1*max_terms + max_terms,
 											C1 != C2.
 
 % 						### APPLYING THE RULE ###
