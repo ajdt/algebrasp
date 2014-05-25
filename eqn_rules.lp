@@ -26,7 +26,7 @@ possible(action(data(N1, C1, C2), addCommTerms), S) 	:- 	holds(N1, field(nodeOpe
 															holds(N1, field(parentOf,C1), S),
 															holds(N1, field(parentOf,C2), S),
 															sameDeg(C1, C2, S),
-															C1 != C2.
+															C1 < C2. % ensure all node pairs are ordered, to avoid redundant grounding
 % 						### APPLYING THE RULE ###
 % 						### CASE 1: parent node has more than 2 children ###
 % add the two nodes together
@@ -94,6 +94,7 @@ deleteChild(N1, C2)		:-	_selected(action(data(N1, C1, C2), addCommTerms), S).
 possible(action(data(N1, C1, C2), addIdent), S) 	:- 	holds(N1, field(nodeOper,add), S),
 														holds(N1, field(parentOf,C1), S),
 														holds(N1, field(parentOf,C2), S),
+														holds(C2, field(type, mono), S),
 														holds(C2, field(nodeCoef,0), S),
 														C1 != C2.
 % 						### APPLYING THE RULE ###
