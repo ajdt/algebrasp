@@ -53,11 +53,8 @@ assigned(N1, field(nodeCoef,Coef1+ Coef2), S) 	:-	_selected(action(data(N1, C1, 
 													holds(C1, field(nodeCoef, Coef1), S),
 													holds(C2, field(nodeCoef, Coef2), S),
 													% conditions to limit grounding
-													holds(N1, field(numChildren, Kids), S),
-													C1 > N1*max_terms,
-													C2 > N1*max_terms,
-													C1 <= N1*max_terms + Kids ,
-													C2 <= N1*max_terms + Kids,
+													_validChildOf(N1, C1),
+													_validChildOf(N1, C2),
 													C1 < C2,
 													coeffValue(Coef1),
 													coeffValue(Coef2).
@@ -65,11 +62,8 @@ assigned(N1, field(nodeDeg,Degree), S) 			:-	_selected(action(data(N1, C1, C2), 
 													holds(N1, field(numChildren,2), S),
 													holds(C1, field(nodeDeg,Degree), S),
 													% conditions to limit grounding
-													holds(N1, field(numChildren, Kids), S),
-													C1 > N1*max_terms,
-													C2 > N1*max_terms,
-													C1 <= N1*max_terms + Kids ,
-													C2 <= N1*max_terms + Kids,
+													_validChildOf(N1, C1),
+													_validChildOf(N1, C2),
 													C1 < C2,
 													degree(Degree).
 % C1 child node is deleted 
@@ -96,13 +90,8 @@ possible(action(data(N1, C1, C2), addIdent), S) 	:- 	holds(N1, field(nodeOper,ad
 														holds(N1, field(parentOf,C2), S),
 														holds(C2, field(type, mono), S),
 														holds(C2, field(nodeCoef,0), S),
-														node(N1),
-														node(C1),
-														node(C2),
-														C1 > N1*max_terms,
-														C2 > N1*max_terms,
-														C1 <= N1*max_terms + max_terms ,
-														C2 <= N1*max_terms + max_terms,
+														_validChildOf(N1, C1),
+														_validChildOf(N1, C2),
 														C1 != C2.
 % 						### APPLYING THE RULE ###
 % shrink subtree by removing the zero node
@@ -122,19 +111,29 @@ possible(action(data(N1, C1, C2), divInverse), S) 	:- 	holds(N1, field(nodeOper,
 														holds(N1, field(parentOf,C2), S),
 														sameDeg(C1, C2, S),
 														sameCoef(C1, C2, S),
+														_validChildOf(N1, C1),
+														_validChildOf(N1, C2),
 														C1 != C2.
 
 % 						### APPLYING THE RULE ###
 %--------------------------------------------------------------------------------
 
 % parent becomes monomial with value 1, we must manually set its side value
-inheritFrom(N1, one, S) 			:-	_selected(action(data(N1, C1, C2), divInverse), S). 
+inheritFrom(N1, one, S) 			:-	_selected(action(data(N1, C1, C2), divInverse), S),
+										_validChildOf(N1, C1), 
+										_validChildOf(N1, C2). 
 assigned(N1, field(side,Side), S) 	:-	_selected(action(data(N1, C1, C2), divInverse), S),
+										_validChildOf(N1, C1), 
+										_validChildOf(N1, C2), 
 										holds(N1, field(side,Side), S).
 
 % completely erase both children
-deleteChild(N1, C1, S) 					:-	_selected(action(data(N1, C1, C2), divInverse), S).
-deleteChild(N1, C2, S) 					:-	_selected(action(data(N1, C1, C2), divInverse), S).
+deleteChild(N1, C1, S) 					:-	_selected(action(data(N1, C1, C2), divInverse), S),
+											_validChildOf(N1, C1), 
+											_validChildOf(N1, C2). 
+deleteChild(N1, C2, S) 					:-	_selected(action(data(N1, C1, C2), divInverse), S),
+											_validChildOf(N1, C1), 
+											_validChildOf(N1, C2). 
 %================================================================================
 %================================================================================
 
@@ -150,17 +149,14 @@ possible(action(data(N1, C1, C2), multIdent), S) 	:- 	holds(N1, field(nodeOper,m
 											holds(N1, field(parentOf,C2), S),
 											holds(C2, field(nodeCoef,1), S),
 											holds(C2, field(nodeDeg,0), S),
-											node(N1),
-											node(C1),
-											node(C2),
-											C1 > N1*max_terms,
-											C2 > N1*max_terms,
-											C1 <= N1*max_terms + max_terms,
-											C2 <= N1*max_terms + max_terms,
+											_validChildOf(N1, C1),
+											_validChildOf(N1, C2),
 											C1 != C2.
 
 % 						### APPLYING THE RULE ###
 % shrink the subtree by removing the child with value 1
-shrinkSubtree(N1, NodeOne, S)					:-	_selected(action(data(N1, C1, NodeOne), multIdent), S).
+shrinkSubtree(N1, NodeOne, S)					:-	_selected(action(data(N1, C1, NodeOne), multIdent), S),
+													_validChildOf(N1, C1),
+													_validChildOf(N1, NodeOne).
 %================================================================================
 %================================================================================

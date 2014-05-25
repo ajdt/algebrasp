@@ -153,6 +153,13 @@ sameCoef(N1, N2, S) :-	holds(N1, field(nodeCoef, Coef), S),
 equalMonom(C1, C2, S)	:-	step(S),
 							sameCoef(C1, C2, S),
 							sameDeg(C1, C2, S).
+
+% indicates that a node is a valid child for a parent
+% used to reduce the grounding of several rules
+_validChildOf(Parent, Child) :- node(Parent),
+								node(Child),
+								Child > Parent*max_terms,
+								Child <= Parent*max_terms + max_terms.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%% RULE SELECTION %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % possible actions:
 %	each possible action is valid at a particular point in time

@@ -10,15 +10,9 @@ possible(action(data(MulNode, Mono1, Mono2), multMonom), S) 	:- 	holds(MulNode, 
 																	holds(Mono1, field(type,mono), S),
 																	holds(Mono2, field(type,mono), S),
 													% conditions to limit grounding
-													holds(MulNode, field(numChildren, Kids), S),
-													Mono1 > MulNode*max_terms,
-													Mono2 > MulNode*max_terms,
-													Mono1 <= MulNode*max_terms + Kids ,
-													Mono2 <= MulNode*max_terms + Kids,
+													_validChildOf(MulNode, Mono1),
+													_validChildOf(MulNode, Mono2),
 													Mono1 < Mono2,
-																	node(MulNode),
-																	node(Mono1),
-																	node(Mono2),
 																	Mono1 != Mono2.
 % 						### APPLYING THE RULE ###
 % create a temp node to represent the product of monomials.
@@ -29,9 +23,11 @@ _makeTempField(field(nodeDeg, SumDeg), S)		:-	_selected(action(data(MulNode, Mon
 													holds(Mono2, field(nodeDeg, D2), S),
 													degree(D1),
 													degree(D2),
-													node(MulNode),
-													node(Mono1),
-													node(Mono2),
+													% conditions to limit grounding
+													_validChildOf(MulNode, Mono1),
+													_validChildOf(MulNode, Mono2),
+													Mono1 < Mono2,
+													Mono1 != Mono2,
 													SumDeg = D1 + D2.
 
 _makeTempField(field(nodeCoef, ProdCoef), S)	:-	_selected(action(data(MulNode, Mono1, Mono2), multMonom), S),
@@ -39,18 +35,12 @@ _makeTempField(field(nodeCoef, ProdCoef), S)	:-	_selected(action(data(MulNode, M
 													holds(MulNode, field(parentOf, Mono2), S),
 													holds(Mono1, field(nodeCoef, C1), S),
 													holds(Mono2, field(nodeCoef, C2), S),
-													% conditions to limit grounding
-													holds(MulNode, field(numChildren, Kids), S),
-													Mono1 > MulNode*max_terms,
-													Mono2 > MulNode*max_terms,
-													Mono1 <= MulNode*max_terms + Kids ,
-													Mono2 <= MulNode*max_terms + Kids,
-													Mono1 < Mono2,
 													coeffValue(C1),
 													coeffValue(C2),
-													node(MulNode),
-													node(Mono1),
-													node(Mono2),
+												% conditions to limit grounding
+												_validChildOf(MulNode, Mono1),
+												_validChildOf(MulNode, Mono2),
+												Mono1 < Mono2,
 													ProdCoef = C1 * C2.
 
 % generate type for temp
@@ -76,16 +66,11 @@ possible(action(data(SumNode, Prod1, Prod2), factor), S) 	:- 	holds(SumNode, fie
 																holds(Prod1, field(parentOf, CommonTerm1), S),
 																holds(Prod2, field(parentOf, CommonTerm2), S),
 																equalMonom(CommonTerm1, CommonTerm2, S),
-																node(Prod1),
-																node(Prod2),
-																node(SumNode),
 													% conditions to limit grounding
-													holds(SumNode, field(numChildren, Kids), S),
-													Prod1 > SumNode*max_terms,
-													Prod2 > SumNode*max_terms,
-													Prod1 <= SumNode*max_terms + Kids ,
-													Prod2 <= SumNode*max_terms + Kids,
-													Prod1 < Prod2,
+													_validChildOf(SumNode, Prod1),
+													_validChildOf(SumNode, Prod2),
+													_validChildOf(Prod1, CommonTerm1),
+													_validChildOf(Prod2, CommonTerm2),
 																Prod1 < Prod2.
 
 % 						### APPLYING THE RULE ###
@@ -95,34 +80,18 @@ update(Prod1, field(nodeOper, add),S)	:-	_selected(action(data(SumNode, Prod1, P
 % replace the common term (B above) in Prod1 with the other term (C above) in Prod2
 replaceCommonTerm(CommonTerm1, OtherTerm2, Prod2, S)	:-	_selected(action(data(SumNode, Prod1, Prod2), factor), S),
 													% conditions to limit grounding
-													node(SumNode),
-													node(Prod1),
-													node(Prod2),
-													Prod1 > SumNode*max_terms,
-													Prod2 > SumNode*max_terms,
-													Prod1 <= SumNode*max_terms + max_terms ,
-													Prod2 <= SumNode*max_terms + max_terms,
+													_validChildOf(SumNode, Prod1),
+													_validChildOf(SumNode, Prod2),
 													Prod1 < Prod2,
 															holds(Prod1, field(parentOf, CommonTerm1), S),
 															holds(Prod2, field(parentOf, CommonTerm2), S),
 															equalMonom(CommonTerm1, CommonTerm2, S),
 															holds(Prod2, field(parentOf, OtherTerm2), S),
 													% shrink the grounding for this rule
-													node(CommonTerm1),
-													node(OtherTerm2),
-													OtherTerm2 > Prod2*max_terms,
-													OtherTerm2 <= Prod2*max_terms + max_terms,
-													CommonTerm2 > Prod2*max_terms,
-													CommonTerm2 <= Prod2*max_terms + max_terms,
-													CommonTerm1 > Prod1*max_terms,
-													CommonTerm1 <= Prod1*max_terms + max_terms,
+													_validChildOf(Prod1, CommonTerm1),
+													_validChildOf(Prod2, OtherTerm2),
+													_validChildOf(Prod2, CommonTerm2),
 													OtherTerm2 != CommonTerm2.
-
-
-validChildOf(Parent, Child) :- node(Parent),
-								node(Child),
-								Child > Parent*max_terms,
-								Child <= Parent*max_terms + max_terms ,
 
 
 inheritFrom(CommonTerm, OtherTermP2, S)		:-	replaceCommonTerm(CommonTerm, OtherTermP2, Prod2, S).
