@@ -94,11 +94,36 @@ update(Prod1, field(nodeOper, add),S)	:-	_selected(action(data(SumNode, Prod1, P
 
 % replace the common term (B above) in Prod1 with the other term (C above) in Prod2
 replaceCommonTerm(CommonTerm1, OtherTerm2, Prod2, S)	:-	_selected(action(data(SumNode, Prod1, Prod2), factor), S),
+													% conditions to limit grounding
+													node(SumNode),
+													node(Prod1),
+													node(Prod2),
+													Prod1 > SumNode*max_terms,
+													Prod2 > SumNode*max_terms,
+													Prod1 <= SumNode*max_terms + max_terms ,
+													Prod2 <= SumNode*max_terms + max_terms,
+													Prod1 < Prod2,
 															holds(Prod1, field(parentOf, CommonTerm1), S),
 															holds(Prod2, field(parentOf, CommonTerm2), S),
 															equalMonom(CommonTerm1, CommonTerm2, S),
 															holds(Prod2, field(parentOf, OtherTerm2), S),
-															OtherTerm2 != CommonTerm2.
+													% shrink the grounding for this rule
+													node(CommonTerm1),
+													node(OtherTerm2),
+													OtherTerm2 > Prod2*max_terms,
+													OtherTerm2 <= Prod2*max_terms + max_terms,
+													CommonTerm2 > Prod2*max_terms,
+													CommonTerm2 <= Prod2*max_terms + max_terms,
+													CommonTerm1 > Prod1*max_terms,
+													CommonTerm1 <= Prod1*max_terms + max_terms,
+													OtherTerm2 != CommonTerm2.
+
+
+validChildOf(Parent, Child) :- node(Parent),
+								node(Child),
+								Child > Parent*max_terms,
+								Child <= Parent*max_terms + max_terms ,
+
 
 inheritFrom(CommonTerm, OtherTermP2, S)		:-	replaceCommonTerm(CommonTerm, OtherTermP2, Prod2, S).
 shrinkSubtree(Prod2, OtherTermP2, S)		:-	replaceCommonTerm(CommonTerm, OtherTermP2, Prod2, S).
