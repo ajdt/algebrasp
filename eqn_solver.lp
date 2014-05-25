@@ -44,8 +44,16 @@ removed(ID, field(Name, OrigValue), S)	:- update(ID, field(Name, Value), S),
 %--------------------------------------------------------------------------------
 % N1 inherits all field() predicates from C1, not hidden() predicates
 % NOTE: DOES NOT remove C1
-assigned(N1, field(Name, Value), S)		:- inheritFrom(N1, C1, S), holds(C1, field(Name, Value), S).	% add new facts
-removed(N1, field(Name, Value), S)		:- inheritFrom(N1, C1, S), holds(N1, field(Name, Value), S). 	% remove all old facts
+assigned(N1, field(Name, Value), S)		:-	inheritFrom(N1, C1, S), holds(C1, field(Name, Value), S),	% add new facts
+											node(N1),
+											node(C1),
+											N1 != C1,
+											step(S).
+removed(N1, field(Name, Value), S)		:-	inheritFrom(N1, C1, S), holds(N1, field(Name, Value), S), 	% remove all old facts
+											node(N1),
+											node(C1),
+											N1 != C1,
+											step(S).
 
 % 						### DELETING A NODE
 %--------------------------------------------------------------------------------
