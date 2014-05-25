@@ -9,54 +9,82 @@
 
 
 
-:- 3 { holds(Node, field(nodeCoef, Coeff), 0) : node(Node) }, coeffValue(Coeff).
+%:- 3 { holds(Node, field(nodeCoef, Coeff), 0) : node(Node) }, coeffValue(Coeff).
 
+
+%================================================================================
 % positive coefficients only
-posOnly.
+%================================================================================
 :-	holds(Node, field(nodeCoef, Coeff), 0),
 	posOnly,
 	Coeff < 0.
 
+%================================================================================
 % don't use zero
-noZero.
+%================================================================================
 :-	holds(Node, field(nodeCoef, Coeff), 0),
 	noZero,
 	Coeff == 0.
-
+%================================================================================
 % don't use one
+%================================================================================
+:-	holds(Node, field(nodeCoef, 1), 0),
+	Node != one,
+	noOne.
+%================================================================================
+% use/don't use second degree
+%================================================================================
+:- 0 {holds(Node, field(nodeDeg, 2), 0) : node(Node) } 0, useSecondDeg.
+:- 1 {holds(Node, field(nodeDeg, 2), 0) : node(Node) } , noSecondDeg.
+
+%================================================================================
+% use/don't use first degree
+%================================================================================
+:- 0 {holds(Node, field(nodeDeg, 1), 0) : node(Node) } 0, useFirstDeg.
+:- 1 {holds(Node, field(nodeDeg, 1), 0) : node(Node) } , noFirstDeg.
+
+%================================================================================
+% use/don't use constants
+%================================================================================
+% note: constant one, always has zero degree, so we exclude it
+:- 0 {holds(Node, field(nodeDeg, 0), 0) : node(Node), Node != one } 0, useConstMono.
+:- 1 {holds(Node, field(nodeDeg, 0), 0) : node(Node), Node != one } , noConstMono.
+
+%================================================================================
+% use/don't use operators
+%================================================================================
+:- 0 {holds(Node, field(nodeOper, add), 0) : node(Node) } 0, useAddOper.
+:- 1 {holds(Node, field(nodeOper, add), 0) : node(Node) } , noAddOper.
+
+:- 0 {holds(Node, field(nodeOper, mul), 0) : node(Node) } 0, useMulOper.
+:- 1 {holds(Node, field(nodeOper, mul), 0) : node(Node) } , noMulOper.
+
+:- 0 {holds(Node, field(nodeOper, div), 0) : node(Node) } 0, useDivOper.
+:- 1 {holds(Node, field(nodeOper, div), 0) : node(Node) } , noDivOper.
+
+%================================================================================
+% available features
+%================================================================================
+%posOnly.
+%noZero.
 %noOne.
-%:-	holds(Node, field(nodeCoef, Coeff), 0),
-%	noOne,
-%	Coeff == 1.
-
-
-%================================================================================
-% use second degree
-%================================================================================
-useSecondDeg.
-:- 0 {holds(Node, field(nodeDeg, Deg), 0) : node(Node), degree(Deg), Deg == 2 } 0, useSecondDeg.
-
+%useSecondDeg.
 %noSecondDeg.
-%:- 1 {holds(Node, field(nodeDeg, Deg), 0) : node(Node), degree(Deg), Deg == 2 } , noSecondDeg.
-
-%================================================================================
-% use first degree
-%================================================================================
-useFirstDeg.
-:- 0 {holds(Node, field(nodeDeg, Deg), 0) : node(Node), degree(Deg), Deg == 1 } 0, useFirstDeg.
-
+%useFirstDeg.
 %noFirstDeg.
-%:- 1 {holds(Node, field(nodeDeg, Deg), 0) : node(Node), degree(Deg), Deg == 1 } , noFirstDeg.
-
-
-
-%================================================================================
-% use constants
-%================================================================================
-useConstMono.
-:- 0 {holds(Node, field(nodeDeg, Deg), 0) : node(Node), degree(Deg), Deg == 0 } 0, useConstMono.
-
+%useConstMono.
 %noConstMono.
-%:- 1 {holds(Node, field(nodeDeg, Deg), 0) : node(Node), degree(Deg), Deg == 0 } , noConstMono.
+%useAddOper.
+%noAddOper.
+%useMulOper.
+%noMulOper.
+%useDivOper.
+noDivOper.
 
 
+%================================================================================
+% Use only certain rules
+%================================================================================
+% using only certain rules, any order
+% use only certain ruels in specific order (n-gram for n greater than 1)
+% don't use certain rules
