@@ -17,11 +17,6 @@ type(one, mono).
 nodeCoef(one,1). 
 nodeDeg(one,0).  
 
-% move these to solver later
-sameDeg(N1, N2, S) 	:- 	holds(N1, field(nodeDeg, Deg), S), 
-						holds(N2, field(nodeDeg, Deg), S),
-						degree(Deg).
-sameCoef(N1, N2, S) :- holds(N1, field(nodeCoef, Coef), S), holds(N2, field(nodeCoef, Coef), S), coeffValue(Coef).
 %================================================================================
 % addCommonTerms: a*x^b + c*x^b ----> (a+c)*x^b, 2 Cases
 %================================================================================
