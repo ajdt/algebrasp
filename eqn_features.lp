@@ -9,8 +9,6 @@
 
 
 
-%:- 3 { holds(Node, field(nodeCoef, Coeff), 0) : node(Node) }, coeffValue(Coeff).
-
 
 %================================================================================
 % positive coefficients only
@@ -63,17 +61,38 @@
 :- 1 {holds(Node, field(nodeOper, div), 0) : node(Node) } , noDivOper.
 
 %================================================================================
+% 							Equation forms
+%================================================================================
+
+%================================================================================
+% sum of squares
+%================================================================================
+sumOfSquares	:-	holds(Sum, field(nodeOper, add), 0),
+					holds(Sum, field(parentOf, XTerm), 0),
+					holds(Sum, field(parentOf, ConstTerm), 0),
+					_validChildOf(Sum, XTerm),
+					_validChildOf(Sum, ConstTerm),
+					holds(XTerm, field(nodeCoef, 1), 0),
+					holds(XTerm, field(nodeDeg, 2), 0),
+					holds(ConstTerm, field(nodeCoef, Square*Square), 0),
+					coeffValue(Square),
+					Square != 0 .
+
+:- 0 {holds(Node, field(nodeOper, add), 0) : node(Node) } 0, useAddOper.
+:- 1 {holds(Node, field(nodeOper, add), 0) : node(Node) } , noAddOper.
+
+%================================================================================
 % available features
 %================================================================================
-%posOnly.
+posOnly.
 %noZero.
-%noOne.
-%useSecondDeg.
+noOne.
+useSecondDeg.
 %noSecondDeg.
 %useFirstDeg.
 %noFirstDeg.
 %useConstMono.
-%noConstMono.
+noConstMono.
 %useAddOper.
 %noAddOper.
 %useMulOper.
@@ -88,3 +107,14 @@ noDivOper.
 % using only certain rules, any order
 % use only certain ruels in specific order (n-gram for n greater than 1)
 % don't use certain rules
+%:- not action(addCommTerms).
+%:- not addCommonThenIdent.
+
+%addCommonThenIdent	:-	_selected(action(X, addCommTerms), S),
+%						_selected(action(Y, addIdent), S+1),
+%						_selected(action(Z, divInverse), S+2),
+%						step(S).
+
+:- 3 { holds(Node, field(nodeCoef, Coeff), 0) : node(Node) }, coeffValue(Coeff).
+
+%:- not sumOfSquares.

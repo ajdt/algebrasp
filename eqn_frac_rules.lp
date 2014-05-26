@@ -16,20 +16,25 @@
 possible(action(data(Numer, Top, Denom, Bottom), fracCancel), S) 	:- 	holds(N1, field(nodeOper,div), S),
 											holds(N1, field(parentOf,Denom), S),
 											holds(N1, field(parentOf,Numer), S),
+											_validChildOf(N1, Denom),
+											_validChildOf(N1, Numer),
 											Denom != Numer,
 											holds(Denom, field(nodeOper,mul), S),
 											holds(Numer, field(nodeOper,mul), S),
 											holds(Numer, field(parentOf,Top), S),
 											holds(Denom, field(parentOf,Bottom), S),
-											holds(Top, field(nodeCoef,Coef), S),			% top and bottom are equal
-											holds(Top, field(nodeDeg,Deg), S),
-											holds(Bottom, field(nodeCoef,Coef), S),
-											holds(Bottom, field(nodeDeg,Deg), S).
+											_validChildOf(Numer, Top),
+											_validChildOf(Denom, Bottom),
+											equalMonom(Top, Bottom, S).
 
 % 						### APPLYING THE RULE ###
 % decrement number of children
-shrinkSubtree(Numer, Top, S) 		:-	_selected(action(data(Numer, Top, Denom, Bottom), fracCancel), S).
-shrinkSubtree(Denom, Bottom, S) 	:-	_selected(action(data(Numer, Top, Denom, Bottom), fracCancel), S).
+shrinkSubtree(Numer, Top, S) 		:-	_selected(action(data(Numer, Top, Denom, Bottom), fracCancel), S),
+										_validChildOf(Numer, Top),
+										_validChildOf(Denom, Bottom).
+shrinkSubtree(Denom, Bottom, S) 	:-	_selected(action(data(Numer, Top, Denom, Bottom), fracCancel), S),
+										_validChildOf(Numer, Top),
+										_validChildOf(Denom, Bottom).
 %================================================================================
 %================================================================================
 
@@ -40,27 +45,61 @@ shrinkSubtree(Denom, Bottom, S) 	:-	_selected(action(data(Numer, Top, Denom, Bot
 % NOTE: requires that both denominators be monomials: change this later to be more general!
 % There's an add node with two div nodes as children
 possible(action(data(Plus, Frac1, Denom1, Frac2, Num2), addFracSameDenom), S) 	:- 	holds(Plus, field(nodeOper,add), S),
+											step(S),
 											holds(Plus, field(parentOf, Frac1), S),
 											holds(Plus, field(parentOf, Frac2), S),
 											Frac1 < Frac2, % ensure the two fractions aren't the same subtree
+											_validChildOf(Plus, Frac1),
+											_validChildOf(Plus, Frac2),
 											holds(Frac1, field(numer,Num1), S),
 											holds(Frac1, field(denom,Denom1), S),
+											_validChildOf(Frac1, Num1),
+											_validChildOf(Frac1, Denom1),
 											holds(Frac2, field(numer,Num2), S),
 											holds(Frac2, field(denom,Denom2), S),
-											holds(Denom1, field(nodeCoef,Coef), S),
-											holds(Denom1, field(nodeDeg,Deg), S),
-											holds(Denom2, field(nodeCoef,Coef), S),
-											holds(Denom2, field(nodeDeg,Deg), S).
+											_validChildOf(Frac2, Num2),
+											_validChildOf(Frac2, Denom2),
+											equalMonom(Denom1, Denom2, S).
 
 % 						### APPLYING THE RULE ###
 % delete the second fraction's numerator: now it's a single node containing
-shrinkSubtree(Frac2, Num2, S) 		:-	_selected(action(data(Plus, Frac1, Denom1, Frac2, Num2), addFracSameDenom), S).
-update(Plus, field(nodeOper, div), S) 	:-	_selected(action(data(Plus, Frac1, Denom1, Frac2, Num2), addFracSameDenom), S).
-assigned(Plus, field(numer, Frac1), S) 	:-	_selected(action(data(Plus, Frac1, Denom1, Frac2, Num2), addFracSameDenom), S).
-assigned(Plus, field(denom, Frac2), S) 	:-	_selected(action(data(Plus, Frac1, Denom1, Frac2, Num2), addFracSameDenom), S).
+shrinkSubtree(Frac2, Num2, S) 			:-	_selected(action(data(Plus, Frac1, Denom1, Frac2, Num2), addFracSameDenom), S),
+											step(S),
+											_validChildOf(Plus, Frac1),
+											_validChildOf(Plus, Frac2),
+											_validChildOf(Frac1, Denom1),
+											_validChildOf(Frac2, Num2).
+update(Plus, field(nodeOper, div), S) 	:-	_selected(action(data(Plus, Frac1, Denom1, Frac2, Num2), addFracSameDenom), S),
+											step(S),
+											_validChildOf(Plus, Frac1),
+											_validChildOf(Plus, Frac2),
+											_validChildOf(Frac1, Denom1),
+											_validChildOf(Frac2, Num2).
+assigned(Plus, field(numer, Frac1), S) 	:-	_selected(action(data(Plus, Frac1, Denom1, Frac2, Num2), addFracSameDenom), S),
+											step(S),
+											_validChildOf(Plus, Frac1),
+											_validChildOf(Plus, Frac2),
+											_validChildOf(Frac1, Denom1),
+											_validChildOf(Frac2, Num2).
+assigned(Plus, field(denom, Frac2), S) 	:-	_selected(action(data(Plus, Frac1, Denom1, Frac2, Num2), addFracSameDenom), S),
+											step(S),
+											_validChildOf(Plus, Frac1),
+											_validChildOf(Plus, Frac2),
+											_validChildOf(Frac1, Denom1),
+											_validChildOf(Frac2, Num2).
 %
-update(Frac1, field(nodeOper, add), S) 	:-	_selected(action(data(Plus, Frac1, Denom1, Frac2, Num2), addFracSameDenom), S).
-inheritFrom(Denom1, Num2, S) 			:-	_selected(action(data(Plus, Frac1, Denom1, Frac2, Num2), addFracSameDenom), S).
+update(Frac1, field(nodeOper, add), S) 	:-	_selected(action(data(Plus, Frac1, Denom1, Frac2, Num2), addFracSameDenom), S),
+											step(S),
+											_validChildOf(Plus, Frac1),
+											_validChildOf(Plus, Frac2),
+											_validChildOf(Frac1, Denom1),
+											_validChildOf(Frac2, Num2).
+inheritFrom(Denom1, Num2, S) 			:-	_selected(action(data(Plus, Frac1, Denom1, Frac2, Num2), addFracSameDenom), S),
+											step(S),
+											_validChildOf(Plus, Frac1),
+											_validChildOf(Plus, Frac2),
+											_validChildOf(Frac1, Denom1),
+											_validChildOf(Frac2, Num2).
 %================================================================================
 %================================================================================
 
@@ -72,6 +111,9 @@ inheritFrom(Denom1, Num2, S) 			:-	_selected(action(data(Plus, Frac1, Denom1, Fr
 % 						### RULE CONDITIONS ###
 % There's a mult node with two div nodes as children
 possible(action(data(Root, Frac1, Frac2), fracMult), S) 	:- 	holds(Root, field(nodeOper,mul), S),
+											step(S),
+											_validChildOf(Root, Frac1),
+											_validChildOf(Root, Frac2),
 											holds(Root, field(parentOf,Frac1), S),
 											holds(Root, field(parentOf,Frac2), S),
 											Frac1 < Frac2,
@@ -80,21 +122,40 @@ possible(action(data(Root, Frac1, Frac2), fracMult), S) 	:- 	holds(Root, field(n
 
 % 						### APPLYING THE RULE ###
 % make root node a fraction and set its numerator/denominator
-update(Root, field(nodeOper, div), S) 		:-	_selected(action(data(Root, Frac1, Frac2), fracMult), S).
-addFracFields(Root, Frac1, Frac2, S) 		:-	_selected(action(data(Root, Frac1, Frac2), fracMult), S).
+update(Root, field(nodeOper, div), S) 		:-	_selected(action(data(Root, Frac1, Frac2), fracMult), S),
+												step(S),
+												_validChildOf(Root, Frac1),
+												_validChildOf(Root, Frac2).
+addFracFields(Root, Frac1, Frac2, S) 		:-	_selected(action(data(Root, Frac1, Frac2), fracMult), S),
+												step(S),
+												_validChildOf(Root, Frac1),
+												_validChildOf(Root, Frac2).
 
 % both Fraction nodes become mult nodes
-makeFracToMult(Frac1, S) 		:-	_selected(action(data(Root, Frac1, Frac2), fracMult), S).
-makeFracToMult(Frac2, S) 		:-	_selected(action(data(Root, Frac1, Frac2), fracMult), S).
+makeFracToMult(Frac1, S) 		:-	_selected(action(data(Root, Frac1, Frac2), fracMult), S),
+									step(S),
+									_validChildOf(Root, Frac1),
+									_validChildOf(Root, Frac2).
+makeFracToMult(Frac2, S) 		:-	_selected(action(data(Root, Frac1, Frac2), fracMult), S),
+									step(S),
+									_validChildOf(Root, Frac1),
+									_validChildOf(Root, Frac2).
 
-update(Node, field(nodeOper, mul), S) :- makeFracToMult(Node, S).
-deleteFracFields(Node, S) :- makeFracToMult(Node, S).
+update(Node, field(nodeOper, mul), S)	:-	makeFracToMult(Node, S),
+											node(Node),
+											step(S).
+deleteFracFields(Node, S)				:-	makeFracToMult(Node, S),
+											node(Node),
+											step(S).
 
 % switch 
 % swap the values of the left side numerator and right side denominator
 swapValues(Denom1, Num1, S) :- _selected(action(data(Root, Frac1, Frac2), fracMult), S),
 								holds(Frac1, field(denom, Denom1), S),
-								holds(Frac2, field(numer, Num1), S).
+								holds(Frac2, field(numer, Num1), S),
+								step(S),
+								_validChildOf(Root, Frac1),
+								_validChildOf(Root, Frac2).
 %================================================================================
 %================================================================================
 
@@ -107,17 +168,25 @@ swapValues(Denom1, Num1, S) :- _selected(action(data(Root, Frac1, Frac2), fracMu
 possible(action(data(Root, Frac), fracDiv), S) :- 	holds(Root, field(nodeOper,div), S),
 													holds(Root, field(parentOf,Frac), S),
 													holds(Root, field(denom, Frac), S),
-													holds(Frac, field(nodeOper,div), S).
+													holds(Frac, field(nodeOper,div), S),
+													_validChildOf(Root, Frac),
+													step(S).
 
 % 						### APPLYING THE RULE ###
 % make root node a mult node remove its numerator/denominator
-update(Root, field(nodeOper, mul), S) 		:-	_selected(action(data(Root, Frac), fracDiv), S).
-deleteFracFields(Root, S) 					:-	_selected(action(data(Root, Frac), fracDiv), S).
+update(Root, field(nodeOper, mul), S) 		:-	_selected(action(data(Root, Frac), fracDiv), S),
+												_validChildOf(Root, Frac),
+												step(S).
+deleteFracFields(Root, S) 					:-	_selected(action(data(Root, Frac), fracDiv), S),
+												_validChildOf(Root, Frac),
+												step(S).
 
 % swap the numer and denom of right side fraction
 swapValues(Num, Denom, S) 					:-	_selected(action(data(Root, Frac), fracDiv), S),
 												holds(Frac, field(numer, Num), S),
-												holds(Frac, field(denom, Denom), S).
+												holds(Frac, field(denom, Denom), S),
+												_validChildOf(Root, Frac),
+												step(S).
 %================================================================================
 %================================================================================
 
@@ -131,39 +200,142 @@ swapValues(Num, Denom, S) 					:-	_selected(action(data(Root, Frac), fracDiv), S
 possible(action(data(Plus, Frac1, Frac2, frac1(Num1, Denom1), frac2(Num2, Denom2)), addFracDiffDenom), S) 	:- 	holds(Plus, field(nodeOper,add), S),
 											holds(Plus, field(parentOf, Frac1), S),
 											holds(Plus, field(parentOf, Frac2), S),
+											_validChildOf(Plus, Frac1),
+											_validChildOf(Plus, Frac2),
 											Frac1 < Frac2, % ensure the two fractions aren't the same subtree
 											holds(Frac1, field(numer,Num1), S),
 											holds(Frac1, field(denom,Denom1), S),
+											_validChildOf(Frac1, Num1),
+											_validChildOf(Frac1, Denom1),
 											holds(Frac2, field(numer,Num2), S),
-											holds(Frac2, field(denom,Denom2), S).
+											holds(Frac2, field(denom,Denom2), S),
+											_validChildOf(Frac2, Num2),
+											_validChildOf(Frac2, Denom2).
 
 % 						### APPLYING THE RULE ###
 % delete the second fraction's numerator: now it's a single node containing
 
 % make the Plus node into a div node
-makeRootDiv(Plus, Frac1, Frac2, S) 		:-	_selected(action(data(Plus, Frac1, Frac2, _, _), addFracDiffDenom), S).
-update(Plus, field(nodeOper, div), S)	:-	makeRootDiv(Plus, Frac1, Frac2, S).
-addFracFields(Plus, Frac1, Frac2)		:-	makeRootDiv(Plus, Frac1, Frac2, S).
+makeRootDiv(Plus, Frac1, Frac2, S) 		:-	_selected(action(data(Plus, Frac1, Frac2, frac1(Num1, Denom1), frac2(Num2, Denom2)), addFracDiffDenom), S),
+											_validChildOf(Plus, Frac1),
+											_validChildOf(Plus, Frac2),
+											_validChildOf(Frac1, Num1),
+											_validChildOf(Frac1, Denom1),
+											_validChildOf(Frac2, Num2),
+											_validChildOf(Frac2, Denom2).
+update(Plus, field(nodeOper, div), S)	:-	makeRootDiv(Plus, Frac1, Frac2, S),
+											_validChildOf(Plus, Frac1),
+											_validChildOf(Plus, Frac2),
+											_validChildOf(Frac1, Num1),
+											_validChildOf(Frac1, Denom1),
+											_validChildOf(Frac2, Num2),
+											_validChildOf(Frac2, Denom2).
+addFracFields(Plus, Frac1, Frac2)		:-	makeRootDiv(Plus, Frac1, Frac2, S),
+											_validChildOf(Plus, Frac1),
+											_validChildOf(Plus, Frac2),
+											_validChildOf(Frac1, Num1),
+											_validChildOf(Frac1, Denom1),
+											_validChildOf(Frac2, Num2),
+											_validChildOf(Frac2, Denom2).
 
 % convert right fraction into a product of denominators
-makeRightMult(Frac2, Denom1, Num2, S) :- _selected(action(data(Plus, Frac1, Frac2, frac1(Num1, Denom1), frac2(Num2, Denom2)), addFracDiffDenom), S).
-update(Frac2, field(nodeOper, mul), S) :- makeRightMult(Frac2, Denom1, Num2, S).
-deleteFracFields(Frac2, S) :- makeRightMult(Frac2, Denom1, Num2, S).
-inheritFrom(Num2, Denom1, S) :- makeRightMult(Frac2, Denom1, Num2, S).
+makeRightMult(Frac2, Denom1, Num2, S) :- _selected(action(data(Plus, Frac1, Frac2, frac1(Num1, Denom1), frac2(Num2, Denom2)), addFracDiffDenom), S),
+											_validChildOf(Plus, Frac1),
+											_validChildOf(Plus, Frac2),
+											_validChildOf(Frac1, Num1),
+											_validChildOf(Frac1, Denom1),
+											_validChildOf(Frac2, Num2),
+											_validChildOf(Frac2, Denom2).
+update(Frac2, field(nodeOper, mul), S) :- makeRightMult(Frac2, Denom1, Num2, S),
+											node(Denom1),
+											_validChildOf(Frac2, Num2),
+											step(S).
+
+deleteFracFields(Frac2, S) :- makeRightMult(Frac2, Denom1, Num2, S),
+											node(Denom1),
+											_validChildOf(Frac2, Num2),
+											step(S).
+inheritFrom(Num2, Denom1, S) :- makeRightMult(Frac2, Denom1, Num2, S),
+											node(Denom1),
+											_validChildOf(Frac2, Num2),
+											step(S).
 
 % make the left side a sum over products of four terms
-makeSumOf(Frac1, Num1, Denom1, Num2, Denom2, S) :- _selected(action(data(Plus, Frac1, Frac2, frac1(Num1, Denom1), frac2(Num2, Denom2)), addFracDiffDenom), S).
-update(Frac1, field(nodeOper, add), S) :- makeSumOf(Frac1, Num1, Denom1, Num2, Denom2, S).
-deleteFracFields(Frac1, S) :- makeSumOf(Frac1, Num1, Denom1, Num2, Denom2, S).
+makeSumOf(Frac1, Num1, Denom1, Num2, Denom2, S)	:-	_selected(action(data(Plus, Frac1, Frac2, frac1(Num1, Denom1), frac2(Num2, Denom2)), addFracDiffDenom), S),
+													_validChildOf(Plus, Frac1),
+													_validChildOf(Plus, Frac2),
+													_validChildOf(Frac1, Num1),
+													_validChildOf(Frac1, Denom1),
+													_validChildOf(Frac2, Num2),
+													_validChildOf(Frac2, Denom2).
+
+update(Frac1, field(nodeOper, add), S)			:-	makeSumOf(Frac1, Num1, Denom1, Num2, Denom2, S),
+													_validChildOf(Plus, Frac1),
+													_validChildOf(Plus, Frac2),
+													_validChildOf(Frac1, Num1),
+													_validChildOf(Frac1, Denom1),
+													_validChildOf(Frac2, Num2),
+													_validChildOf(Frac2, Denom2),
+													step(S).
+deleteFracFields(Frac1, S)						:-	makeSumOf(Frac1, Num1, Denom1, Num2, Denom2, S),
+													_validChildOf(Plus, Frac1),
+													_validChildOf(Plus, Frac2),
+													_validChildOf(Frac1, Num1),
+													_validChildOf(Frac1, Denom1),
+													_validChildOf(Frac2, Num2),
+													_validChildOf(Frac2, Denom2),
+													step(S).
 
 % convert old leaves to mul nodes
-convertToOperWithKids(Num1, mul, 2, S) :- makeSumOf(Frac1, Num1, Denom1, Num2, Denom2, S).
-convertToOperWithKids(Denom1, mul, 2, S) :- makeSumOf(Frac1, Num1, Denom1, Num2, Denom2, S).
+convertToOperWithKids(Num1, mul, 2, S)			:-	makeSumOf(Frac1, Num1, Denom1, Num2, Denom2, S),
+													_validChildOf(Plus, Frac1),
+													_validChildOf(Plus, Frac2),
+													_validChildOf(Frac1, Num1),
+													_validChildOf(Frac1, Denom1),
+													_validChildOf(Frac2, Num2),
+													_validChildOf(Frac2, Denom2),
+													step(S).
+convertToOperWithKids(Denom1, mul, 2, S)		:-	makeSumOf(Frac1, Num1, Denom1, Num2, Denom2, S),
+													_validChildOf(Plus, Frac1),
+													_validChildOf(Plus, Frac2),
+													_validChildOf(Frac1, Num1),
+													_validChildOf(Frac1, Denom1),
+													_validChildOf(Frac2, Num2),
+													_validChildOf(Frac2, Denom2),
+													step(S).
 
 % counting on convertToOperWithKids() to create these children
-inheritFrom(Num1*max_terms + 1, Num1, S) :- makeSumOf(Frac1, Num1, Denom1, Num2, Denom2, S).
-inheritFrom(Num1*max_terms + 2, Denom2, S) :- makeSumOf(Frac1, Num1, Denom1, Num2, Denom2, S).
-inheritFrom(Denom1*max_terms + 1, Denom1, S) :- makeSumOf(Frac1, Num1, Denom1, Num2, Denom2, S).
-inheritFrom(Denom1*max_terms + 2, Num2, S) :- makeSumOf(Frac1, Num1, Denom1, Num2, Denom2, S).
+inheritFrom(Num1*max_terms + 1, Num1, S) 		:-	makeSumOf(Frac1, Num1, Denom1, Num2, Denom2, S),
+													_validChildOf(Plus, Frac1),
+													_validChildOf(Plus, Frac2),
+													_validChildOf(Frac1, Num1),
+													_validChildOf(Frac1, Denom1),
+													_validChildOf(Frac2, Num2),
+													_validChildOf(Frac2, Denom2),
+													step(S).
+inheritFrom(Num1*max_terms + 2, Denom2, S)		:-	makeSumOf(Frac1, Num1, Denom1, Num2, Denom2, S),
+													_validChildOf(Plus, Frac1),
+													_validChildOf(Plus, Frac2),
+													_validChildOf(Frac1, Num1),
+													_validChildOf(Frac1, Denom1),
+													_validChildOf(Frac2, Num2),
+													_validChildOf(Frac2, Denom2),
+													step(S).
+inheritFrom(Denom1*max_terms + 1, Denom1, S)	:-	makeSumOf(Frac1, Num1, Denom1, Num2, Denom2, S),
+													_validChildOf(Plus, Frac1),
+													_validChildOf(Plus, Frac2),
+													_validChildOf(Frac1, Num1),
+													_validChildOf(Frac1, Denom1),
+													_validChildOf(Frac2, Num2),
+													_validChildOf(Frac2, Denom2),
+													step(S).
+inheritFrom(Denom1*max_terms + 2, Num2, S)		:-	makeSumOf(Frac1, Num1, Denom1, Num2, Denom2, S),
+													_validChildOf(Plus, Frac1),
+													_validChildOf(Plus, Frac2),
+													_validChildOf(Frac1, Num1),
+													_validChildOf(Frac1, Denom1),
+													_validChildOf(Frac2, Num2),
+													_validChildOf(Frac2, Denom2),
+													step(S).
 %================================================================================
 %================================================================================
