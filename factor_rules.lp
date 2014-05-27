@@ -16,6 +16,7 @@ possible(action(data(MulNode, Mono1, Mono2), multMonom), S) 	:- 	holds(MulNode, 
 																	Mono1 != Mono2.
 % 						### APPLYING THE RULE ###
 % create a temp node to represent the product of monomials.
+node(temp).
 
 % generate degree and coefficient fields 
 _makeTempField(field(nodeDeg, SumDeg), S)		:-	_selected(action(data(MulNode, Mono1, Mono2), multMonom), S),
