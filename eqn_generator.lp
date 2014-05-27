@@ -26,6 +26,7 @@ side(left;right).
 operator(add;mul;div).
 nodeType(poly;mono).
 
+node(1..max_terms**(max_depth + 2) ).
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%% ROOT NODES  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 root(1, left).			% hardcoded left and right roots
 root(2, right).
