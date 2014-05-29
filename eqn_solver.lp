@@ -30,15 +30,24 @@ holds(ID, Fact, 0)		:-	initially(ID, Fact).
 % Facts can be removed, updated, or assigned at each step, if not, then they carry over from last step.
 
 % every fact that isn't removed at step S, holds at the next step
-holds(ID, Fact, S+1)	:-	holds(ID, Fact, S), not removed(ID, Fact, S), step(S+1).
-holds(ID, Fact, S+1)	:-	assigned(ID, Fact, S), step(S+1). % new fact that is generated
+holds(ID, Fact, S+1)	:-	holds(ID, Fact, S), 
+							not removed(ID, Fact, S), 
+							step(S+1), 
+							node(ID).
+holds(ID, Fact, S+1)	:-	assigned(ID, Fact, S), % new fact that is generated
+							node(ID),
+							step(S+1). 
 
 % 						### UPDATE FACT
 %--------------------------------------------------------------------------------
 % to update a field means to remove old field and add the new field value
-assigned(ID, Fact, S) :- update(ID, Fact, S).
-removed(ID, field(Name, OrigValue), S)	:- update(ID, field(Name, Value), S), 
-										holds(ID, field(Name, OrigValue), S).
+assigned(ID, Fact, S)	:-	update(ID, Fact, S),
+							node(ID),
+							step(S).
+removed(ID, field(Name, OrigValue), S)	:-	update(ID, field(Name, Value), S), 
+											node(ID),
+											step(S),
+											holds(ID, field(Name, OrigValue), S).
 
 % 						### INHERITING FACTS
 %--------------------------------------------------------------------------------
@@ -59,37 +68,60 @@ removed(N1, field(Name, Value), S)		:-	inheritFrom(N1, C1, S), holds(N1, field(N
 %--------------------------------------------------------------------------------
 % abstracted notion of deleting a node
 removed(ToDelete, Fact, S)		:-	delete(ToDelete, S),
+									node(ToDelete),
+									step(S),
 									holds(ToDelete, Fact, S) .
 
 % 						### DELETE CHILD
 %--------------------------------------------------------------------------------
 % removes a child and paren'ts reference to it
 % NOTE: does not update numChildren counter. This must be done manually
-delete(ToDelete, S)								:-	deleteChild(Parent, ToDelete, S).
-removed(Parent, fact(parentOf, ToDelete), S)	:-	deleteChild(Parent, ToDelete, S).
+delete(ToDelete, S)								:-	deleteChild(Parent, ToDelete, S),
+													_validChildOf(Parent, ToDelete),
+													step(S).
+removed(Parent, fact(parentOf, ToDelete), S)	:-	deleteChild(Parent, ToDelete, S),
+													_validChildOf(Parent, ToDelete),
+													step(S).
 									
 
 % 						### SWAPPING NODE VALUES
 %--------------------------------------------------------------------------------
 % each node will inherit from the other 
-inheritFrom(Node1, Node2, S) :- swapValues(Node1, Node2, S).
-inheritFrom(Node2, Node1, S) :- swapValues(Node1, Node2, S).
+inheritFrom(Node1, Node2, S) :- swapValues(Node1, Node2, S),
+								node(Node1),
+								node(Node2),
+								step(S).
+inheritFrom(Node2, Node1, S) :- swapValues(Node1, Node2, S),
+								node(Node1),
+								node(Node2),
+								step(S).
 
 % 						### REMOVING NODE FROM SUBTREE
 %--------------------------------------------------------------------------------
 % shrinking a subtree by one node!
-deleteChild(Parent, ToRemove, S) :- shrinkSubtree(Parent, ToRemove, S).
+deleteChild(Parent, ToRemove, S) :- shrinkSubtree(Parent, ToRemove, S),
+									_validChildOf(Parent, ToRemove),
+									step(S).
 							
 % if have more than two kids, then just decrement num kids
 update(Parent, field(numChildren,Kids - 1), S)	:-	shrinkSubtree(Parent, ToRemove, S),
-													holds(Parent, field(numChildren,Kids), S), Kids > 2.
+													holds(Parent, field(numChildren,Kids), S), Kids > 2,
+													_validChildOf(Parent, ToRemove),
+													step(S).
 % if exactly two kids, then replace remaining child...
 inheritFromAndDelete(Parent, SecondKid, S)		:-	shrinkSubtree(Parent, ToRemove, S),
 													holds(Parent, field(numChildren,2), S),
 													holds(Parent, field(parentOf,SecondKid), S),
+													_validChildOf(Parent, ToRemove),
+													_validChildOf(Parent, SecondKid),
+													step(S),
 													SecondKid != ToRemove.
-inheritFrom(Parent, SecondKid, S)				:- inheritFromAndDelete(Parent, SecondKid, S).
-deleteChild(Parent, SecondKid, S) 				:- inheritFromAndDelete(Parent, SecondKid, S).
+inheritFrom(Parent, SecondKid, S)				:-	inheritFromAndDelete(Parent, SecondKid, S),
+													_validChildOf(Parent, SecondKid),
+													step(S).
+deleteChild(Parent, SecondKid, S) 				:-	inheritFromAndDelete(Parent, SecondKid, S),
+													_validChildOf(Parent, SecondKid),
+													step(S).
 
 % 						### SHRINK SUBTREE, USE NEW VALUE
 %--------------------------------------------------------------------------------
@@ -97,50 +129,113 @@ deleteChild(Parent, SecondKid, S) 				:- inheritFromAndDelete(Parent, SecondKid,
 % and we wish to replace Child1 and Child2 with NewValue.
 % 
 
-deleteChild(Parent, Child2, S) 					:- contractNodes(Parent, Child1, Child2, NewValue, S).
+deleteChild(Parent, Child2, S) 					:-	contractNodes(Parent, Child1, Child2, NewValue, S),
+													_validChildOf(Parent, Child1),
+													_validChildOf(Parent, Child2),
+													step(S).
 							
 % if have more than two kids, then just decrement num kids and replace Child1 with newValue
-update(Parent, field(numChildren,Kids - 1), S)	:- contractNodes(Parent, Child1, Child2, NewValue, S),
-													holds(Parent, field(numChildren,Kids), S), Kids > 2.
-inheritFromAndDelete(Child1, NewValue, S)		:- contractNodes(Parent, Child1, Child2, NewValue, S),
-													holds(Parent, field(numChildren,Kids), S), Kids > 2.
+update(Parent, field(numChildren,Kids - 1), S)	:-	contractNodes(Parent, Child1, Child2, NewValue, S),
+													holds(Parent, field(numChildren,Kids), S), Kids > 2,
+													_validChildOf(Parent, Child1),
+													_validChildOf(Parent, Child2),
+													step(S).
+inheritFromAndDelete(Child1, NewValue, S)		:- 	contractNodes(Parent, Child1, Child2, NewValue, S),
+													holds(Parent, field(numChildren,Kids), S), Kids > 2,
+													_validChildOf(Parent, Child1),
+													_validChildOf(Parent, Child2),
+													step(S).
 
 % if exactly two kids, then delete Child1 too
-deleteChild(Parent, Child1, S) 					:- contractNodes(Parent, Child1, Child2, NewValue, S),
-													holds(Parent, field(numChildren,2), S).
-inheritFromAndDelete(Parent, NewValue, S)		:- contractNodes(Parent, Child1, Child2, NewValue, S),
-													holds(Parent, field(numChildren,2), S).
+deleteChild(Parent, Child1, S) 					:-	contractNodes(Parent, Child1, Child2, NewValue, S),
+													holds(Parent, field(numChildren,2), S),
+													_validChildOf(Parent, Child1),
+													_validChildOf(Parent, Child2),
+													step(S).
+inheritFromAndDelete(Parent, NewValue, S)		:-	contractNodes(Parent, Child1, Child2, NewValue, S),
+													holds(Parent, field(numChildren,2), S),
+													_validChildOf(Parent, Child1),
+													_validChildOf(Parent, Child2),
+													step(S).
 
-inheritFrom(Parent, SecondKid, S)				:- inheritFromAndDelete(Parent, SecondKid, S).
-deleteChild(Parent, SecondKid, S) 				:- inheritFromAndDelete(Parent, SecondKid, S).
+inheritFrom(Parent, SecondKid, S)				:-	inheritFromAndDelete(Parent, SecondKid, S),
+													_validChildOf(Parent, Child1),
+													_validChildOf(Parent, Child2),
+													step(S).
+deleteChild(Parent, SecondKid, S) 				:-	inheritFromAndDelete(Parent, SecondKid, S),
+													_validChildOf(Parent, Child1),
+													_validChildOf(Parent, Child2),
+													step(S).
 
 % 						### REMOVING A SINGLE FIELD
 %--------------------------------------------------------------------------------
-removed(ID, field(fieldName, Value), S) :- deleteField(ID, fieldName, S), holds(ID, field(fieldName, Value), S).
+removed(ID, field(fieldName, Value), S)	:-	deleteField(ID, fieldName, S), 
+											holds(ID, field(fieldName, Value), S),
+											node(ID),
+											step(S).
 
 % 						### REMOVING/ADDING numer/denom FIELDS
 %--------------------------------------------------------------------------------
-deleteField(ID, numer, S) 				:- deleteFracFields(ID,S).
-deleteField(ID, denom, S) 				:- deleteFracFields(ID,S).
+deleteField(ID, numer, S) 				:-	deleteFracFields(ID,S),
+											node(ID),
+											step(S).
+deleteField(ID, denom, S) 				:-	deleteFracFields(ID,S),
+											node(ID),
+											step(S).
 
-assigned(ID, field(numer, Num), S)		:- addFracFields(ID, Num, Denom, S).
-assigned(ID, field(denom, Denom), S) 	:- addFracFields(ID, Num, Denom, S).
+assigned(ID, field(numer, Num), S)		:-	addFracFields(ID, Num, Denom, S),
+											_validChildOf(ID, Num), % num and denom should only be children
+											_validChildOf(ID, Denom),
+											step(S).
+assigned(ID, field(denom, Denom), S) 	:-	addFracFields(ID, Num, Denom, S),
+											_validChildOf(ID, Num), % num and denom should only be children
+											_validChildOf(ID, Denom),
+											step(S).
 
 % 						### CONVERT MONOMIAL TO OPERATOR NODE AND ADD CHILDREN
 %--------------------------------------------------------------------------------
 % ... conversion part
-delete(ID, S) 									:-	convertToOperWithKids(ID, Oper, NumKids, S).	% delete old fields
-assigned(ID, field(type, poly), S) 				:-	convertToOperWithKids(ID, Oper, NumKids, S).	% new fields
-assigned(ID, field(nodeOper, Oper), S) 			:-	convertToOperWithKids(ID, Oper, NumKids, S).
-assigned(ID, field(numChildren, NumKids), S) 	:-	convertToOperWithKids(ID, Oper, NumKids, S).
+delete(ID, S) 									:-	convertToOperWithKids(ID, Oper, NumKids, S),	% delete old fields
+													node(ID),
+													operator(Oper),
+													termNum(NumKids),
+													step(S).
+assigned(ID, field(type, poly), S) 				:-	convertToOperWithKids(ID, Oper, NumKids, S),	% new fields
+													node(ID),
+													operator(Oper),
+													termNum(NumKids),
+													step(S).
+assigned(ID, field(nodeOper, Oper), S) 			:-	convertToOperWithKids(ID, Oper, NumKids, S),
+													node(ID),
+													operator(Oper),
+													termNum(NumKids),
+													step(S).
+assigned(ID, field(numChildren, NumKids), S) 	:-	convertToOperWithKids(ID, Oper, NumKids, S),
+													node(ID),
+													operator(Oper),
+													termNum(NumKids),
+													step(S).
 assigned(ID, field(side, Side), S) 				:-	convertToOperWithKids(ID, Oper, NumKids, S), 
-													holds(ID, field(side, Side), S).
-makeChildrenFor(ID, NumKids, S) 				:-	convertToOperWithKids(ID, Oper, NumKids, S).
+													holds(ID, field(side, Side), S),
+													node(ID),
+													operator(Oper),
+													termNum(NumKids),
+													step(S).
+makeChildrenFor(ID, NumKids, S) 				:-	convertToOperWithKids(ID, Oper, NumKids, S),
+													node(ID),
+													operator(Oper),
+													termNum(NumKids),
+													step(S).
 
 % ... child creation part
 % 		NOTE: does not fill in any field data for the children
-newKidOnTheBlock(ID, ID*max_terms + KidNum, S) :- makeChildrenFor(ID, NumKids, S), KidNum = 1..NumKids .
-assigned(Parent, field(parentOf, KidID), S) :- newKidOnTheBlock(Parent, KidID, S).
+newKidOnTheBlock(ID, ID*max_terms + KidNum, S)	:-	makeChildrenFor(ID, NumKids, S), KidNum = 1..NumKids ,
+													node(ID),
+													termNum(NumKids),
+													step(S).
+assigned(Parent, field(parentOf, KidID), S)		:-	newKidOnTheBlock(Parent, KidID, S),
+													_validChildOf(Parent, KidID),
+													step(S).
 
 % 						### MISC HELPERS
 %--------------------------------------------------------------------------------
@@ -159,6 +254,8 @@ sameCoef(N1, N2, S) :-	holds(N1, field(nodeCoef, Coef), S),
 						node(N2),
 						coeffValue(Coef).
 equalMonom(C1, C2, S)	:-	step(S),
+							node(C1),
+							node(C2),
 							sameCoef(C1, C2, S),
 							sameDeg(C1, C2, S).
 
