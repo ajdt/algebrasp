@@ -92,10 +92,10 @@ removed(ToDelete, Fact, S)		:-	delete(ToDelete, S),
 delete(ToDelete, S)								:-	deleteChild(Parent, ToDelete, S),
 													_validChildOf(Parent, ToDelete),
 													step(S).
-removed(Parent, fact(parentOf, ToDelete), S)	:-	deleteChild(Parent, ToDelete, S),
+removed(Parent, field(parentOf, ToDelete), S)	:-	deleteChild(Parent, ToDelete, S),
 													_validChildOf(Parent, ToDelete),
 													step(S).
-update(Parent, fact(numChildren, Kids - 1), S)	:-	deleteChild(Parent, ToDelete, S),
+update(Parent, field(numChildren, Kids - 1), S)	:-	deleteChild(Parent, ToDelete, S),
 													_validChildOf(Parent, ToDelete),
 													holds(Parent, field(numChildren, Kids), S),
 													Kids < max_terms,
@@ -357,11 +357,9 @@ _nodeDeg(ID, D, S)			:-	holds(ID, field(nodeDeg,D), S).
 _numer(ID, D, S)			:-	holds(ID, field(numer,D), S).		
 _denom(ID, D, S)			:-	holds(ID, field(denom,D), S).		
 
-_assigned(X,Y,Z) :- assigned(X,Y,Z).
 %#show holds/2.
 %#show action/1.
 #show action/1.
-#show _assigned/3.
 %#show _node/1.
 %#show _type/2.
 %#show _nodeOper/2.

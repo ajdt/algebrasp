@@ -82,14 +82,12 @@ update(Plus, field(nodeOper, mul), S)	:-	_selected(action(data(Plus, CoefD, Coef
 deleteChild(Plus, Const, S)				:-	_selected(action(data(Plus, CoefD, CoefE), factorQuad), S),
 											holds(stdQuadPoly(Plus, children(XSquare, XMonom, Const)), S).
 
-% TODO: debug deleteChild() so this line isn't needed!!!
-removed(Plus, field(parentOf, Const), S)						:-	_selected(action(data(Plus, CoefD, CoefE), factorQuad), S),
-																	holds(stdQuadPoly(Plus, children(XSquare, XMonom, Const)), S).
 % convert XSquare and XMonom children to binomials
 convertToOperWithKids(XSquare, add, 2, S ; XMonom, add, 2, S )	:-	_selected(action(data(Plus, CoefD, CoefE), factorQuad), S),
 																	holds(stdQuadPoly(Plus, children(XSquare, XMonom, Const)), S).
-createMono(Kid, 1, 1, S)										:-	newKidOnTheBlock(Parent, Kid, S),
-																	Kid == Parent*max_terms + 1.
+createMono(Kid, 1, 1, S)										:-	_selected(action(data(Plus, CoefD, CoefE), factorQuad), S),
+																	newKidOnTheBlock(Parent, Kid, S),
+																	Kid == Parent*max_terms + 1. % first child of parent
 createMono(Kid, CoefD, 0, S)									:-	_selected(action(data(Plus, CoefD, CoefE), factorQuad), S),
 																	holds(stdQuadPoly(Plus, children(XSquare, XMonom, Const)), S),
 																	newKidOnTheBlock(XSquare, Kid, S),
