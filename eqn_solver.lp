@@ -247,7 +247,7 @@ makeChildrenFor(ID, NumKids, S) 				:-	convertToOperWithKids(ID, Oper, NumKids, 
 
 % ... child creation part
 % 		NOTE: does not fill in any field data for the children
-newKidOnTheBlock(ID, ID*max_terms + KidNum, S)	:-	makeChildrenFor(ID, NumKids, S), KidNum = 2..NumKids ,
+newKidOnTheBlock(ID, ID*max_terms + KidNum, S)	:-	makeChildrenFor(ID, NumKids, S), KidNum = 1..NumKids ,
 													node(ID),
 													termNum(NumKids),
 													step(S).
