@@ -5,50 +5,49 @@
 
 
 
-% this is where I'll be testing new rules to add to the solver
-
+holds(subtreeTriple(Root, children(Left, Middle, Right)), S)	:-	holds(Root, field(parentOf, Left), S),
+															holds(Root, field(parentOf, Middle), S),
+															holds(Root, field(parentOf, Right), S),
+															Left < Middle,
+															Middle < Right,
+															_validChildOf(Root, Left),
+															_validChildOf(Root, Middle),
+															_validChildOf(Root, Right),
+															step(S).
 %================================================================================
-% AddfracDiffDenom: A/B + C/D--> (AD+BC)/BD
+% compSquare: x^2 + b*x + c --> (x + b/2)*(x + b/2) + c - b^2/4
 %================================================================================
-% 						### RULE CONDITIONS ###
-% NOTE: requires that both denominators be monomials: change this later to be more general!
-% There's an add node with two div nodes as children
-possible(action(data(Plus, Frac1, Frac2, frac1(Num1, Denom1), frac2(Num2, Denom2)), addFracDiffDenom), S) 	:- 	holds(Plus, field(nodeOper,add), S),
-											holds(Plus, field(parentOf, Frac1), S),
-											holds(Plus, field(parentOf, Frac2), S),
-											Frac1 < Frac2, % ensure the two fractions aren't the same subtree
-											holds(Frac1, field(numer,Num1), S),
-											holds(Frac1, field(denom,Denom1), S),
-											holds(Frac2, field(numer,Num2), S),
-											holds(Frac2, field(denom,Denom2), S).
+possible(action(data(Plus, XSquare, XMonom, Const), compSquare), S)	:-	holds(subtreeTriple(Plus, children(XSquare, XMonom, Const)), S),
+																		Plus == 1,
+																		holds(Plus, field(nodeOper, add), S),
+																		holds(XSquare, field(nodeDeg, 2), S),	% x^2
+																		holds(XSquare, field(nodeCoef, 1), S),
+																		holds(XMonom, field(nodeDeg, 1), S),	% B*x
+																		holds(XMonom, field(nodeCoef, Coef), S),
+																		coeffValue(Coef), Coef != 0, Coef != 1,
+																		holds(Const, field(nodeDeg, 0), S),		% B^2/4
+																		holds(Const, field(nodeCoef, Coef**2/4), S),
+																		step(S).
 
 % 						### APPLYING THE RULE ###
 % delete the second fraction's numerator: now it's a single node containing
+update(Plus, field(nodeOper, mul), S)	:-	_selected(action(data(Plus, XSquare, XMonom, Const), compSquare), S).
+deleteChild(Plus, Const, S)				:-	_selected(action(data(Plus, XSquare, XMonom, Const), compSquare), S).
+% todo: parentOf field isn't being updated properly when delete child is applied!
+removed(Plus, field(parentOf, Const), S):-	_selected(action(data(Plus, XSquare, XMonom, Const), compSquare), S).
+deleteChild(Plus, Const, S)				:-	_selected(action(data(Plus, XSquare, XMonom, Const), compSquare), S).
 
-% make the Plus node into a div node
-makeRootDiv(Plus, Frac1, Frac2, S) 		:-	_selected(action(data(Plus, Frac1, Frac2, _, _), addFracDiffDenom), S).
-update(Plus, field(nodeOper, div), S)	:-	makeRootDiv(Plus, Frac1, Frac2, S).
-addFracFields(Plus, Frac1, Frac2)		:-	makeRootDiv(Plus, Frac1, Frac2, S).
+convertToOperWithKids(XSquare, add, 2, S ; XMonom, add, 2, S)	:-	_selected(action(data(Plus, XSquare, XMonom, Const), compSquare), S).
 
-% convert right fraction into a product of denominators
-makeRightMult(Frac2, Denom1, Num2, S) :- _selected(action(data(Plus, Frac1, Frac2, frac1(Num1, Denom1), frac2(Num2, Denom2)), addFracDiffDenom), S).
-update(Frac2, field(nodeOper, mul), S) :- makeRightMult(Frac2, Denom1, Num2, S).
-deleteFracFields(Frac2, S) :- makeRightMult(Frac2, Denom1, Num2, S).
-inheritFrom(Num2, Denom1, S) :- makeRightMult(Frac2, Denom1, Num2, S).
+% each monomial
+createMono(NewKid, 1, 1, S)					:-	_selected(action(data(Plus, XSquare, XMonom, Const), compSquare), S),
+												newKidOnTheBlock(Parent, NewKid, S),
+												NewKid == Parent*max_terms + 1.
+createMono(NewKid, Coef/2, 0, S)			:-	_selected(action(data(Plus, XSquare, XMonom, Const), compSquare), S),
+												holds(XMonom, field(nodeCoef, Coef), S),
+												coeffValue(Coef),
+												newKidOnTheBlock(Parent, NewKid, S),
+												NewKid == Parent*max_terms + 2.
 
-% make the left side a sum over products of four terms
-makeSumOf(Frac1, Num1, Denom1, Num2, Denom2, S) :- _selected(action(data(Plus, Frac1, Frac2, frac1(Num1, Denom1), frac2(Num2, Denom2)), addFracDiffDenom), S).
-update(Frac1, field(nodeOper, add), S) :- makeSumOf(Frac1, Num1, Denom1, Num2, Denom2, S).
-deleteFracFields(Frac1, S) :- makeSumOf(Frac1, Num1, Denom1, Num2, Denom2, S).
-
-% convert old leaves to mul nodes
-convertToOperWithKids(Num1, mul, 2, S) :- makeSumOf(Frac1, Num1, Denom1, Num2, Denom2, S).
-convertToOperWithKids(Denom1, mul, 2, S) :- makeSumOf(Frac1, Num1, Denom1, Num2, Denom2, S).
-
-% counting on convertToOperWithKids() to create these children
-inheritFrom(Num1*max_terms + 1, Num1, S) :- makeSumOf(Frac1, Num1, Denom1, Num2, Denom2, S).
-inheritFrom(Num1*max_terms + 2, Denom2, S) :- makeSumOf(Frac1, Num1, Denom1, Num2, Denom2, S).
-inheritFrom(Denom1*max_terms + 1, Denom1, S) :- makeSumOf(Frac1, Num1, Denom1, Num2, Denom2, S).
-inheritFrom(Denom1*max_terms + 2, Num2, S) :- makeSumOf(Frac1, Num1, Denom1, Num2, Denom2, S).
 %================================================================================
 %================================================================================

@@ -64,6 +64,19 @@ removed(N1, field(Name, Value), S)		:-	inheritFrom(N1, C1, S), holds(N1, field(N
 											N1 != C1,
 											step(S).
 
+% 						### CREATING A MONOM
+%--------------------------------------------------------------------------------
+% 
+assigned(Node, field(nodeDeg, Deg), S) :- createMono(Node, Coef, Deg, S),
+											node(Node), coeffValue(Coef), degree(Deg),
+											step(S).
+assigned(Node, field(nodeCoef, Coef), S) :- createMono(Node, Coef, Deg, S),
+											node(Node), coeffValue(Coef), degree(Deg),
+											step(S).
+assigned(Node, field(type, mono), S) :- createMono(Node, Coef, Deg, S),
+											node(Node), coeffValue(Coef), degree(Deg),
+											step(S).
+
 % 						### DELETING A NODE
 %--------------------------------------------------------------------------------
 % abstracted notion of deleting a node
@@ -81,6 +94,11 @@ delete(ToDelete, S)								:-	deleteChild(Parent, ToDelete, S),
 													step(S).
 removed(Parent, fact(parentOf, ToDelete), S)	:-	deleteChild(Parent, ToDelete, S),
 													_validChildOf(Parent, ToDelete),
+													step(S).
+update(Parent, fact(numChildren, Kids - 1), S)	:-	deleteChild(Parent, ToDelete, S),
+													_validChildOf(Parent, ToDelete),
+													holds(Parent, field(numChildren, Kids), S),
+													Kids < max_terms,
 													step(S).
 									
 
@@ -229,7 +247,7 @@ makeChildrenFor(ID, NumKids, S) 				:-	convertToOperWithKids(ID, Oper, NumKids, 
 
 % ... child creation part
 % 		NOTE: does not fill in any field data for the children
-newKidOnTheBlock(ID, ID*max_terms + KidNum, S)	:-	makeChildrenFor(ID, NumKids, S), KidNum = 1..NumKids ,
+newKidOnTheBlock(ID, ID*max_terms + KidNum, S)	:-	makeChildrenFor(ID, NumKids, S), KidNum = 2..NumKids ,
 													node(ID),
 													termNum(NumKids),
 													step(S).
@@ -339,9 +357,11 @@ _nodeDeg(ID, D, S)			:-	holds(ID, field(nodeDeg,D), S).
 _numer(ID, D, S)			:-	holds(ID, field(numer,D), S).		
 _denom(ID, D, S)			:-	holds(ID, field(denom,D), S).		
 
+_assigned(X,Y,Z) :- assigned(X,Y,Z).
 %#show holds/2.
 %#show action/1.
 #show action/1.
+#show _assigned/3.
 %#show _node/1.
 %#show _type/2.
 %#show _nodeOper/2.
