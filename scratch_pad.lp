@@ -13,6 +13,19 @@ holds(quadNoXTerm(Plus, children(XSquare, Const)), S) :- holds(subtreePair(Plus,
 																		holds(Const, field(nodeDeg, 0), S),		
 																		step(S).
 
+createMono(Kid, 1, 1, S)	:-	createNewStdBinomial(Plus, Coef, S), 
+								newKidOnTheBlock(Plus, Kid, S),
+								Kid == Plus*max_terms + 1,
+								coeffValue(Coef),
+								node(Plus).
+
+createMono(Kid, Coef, 0, S)	:-	createNewStdBinomial(Plus, Coef, S), 
+								newKidOnTheBlock(Plus, Kid, S),
+								Kid == Plus*max_terms + 2,
+								coeffValue(Coef),
+								node(Plus).
+
+
 %================================================================================
 % compSquare: x^2 + b*x + c --> (x + b/2)*(x + b/2) + c - b^2/4
 %================================================================================
@@ -45,16 +58,9 @@ deleteChild(Plus, Const, S)				:-	_selected(action(data(Plus, XSquare, XMonom, C
 
 % convert XSquare and XMonom to binomials 
 convertToOperWithKids(XSquare, add, 2, S ; XMonom, add, 2, S)	:-	_selected(action(data(Plus, XSquare, XMonom, Const), compSquare), S).
-
-% create the x term and constant term to make (x + b/2) binomials
-createMono(NewKid, 1, 1, S)					:-	_selected(action(data(Plus, XSquare, XMonom, Const), compSquare), S),
-												newKidOnTheBlock(Parent, NewKid, S),
-												NewKid == Parent*max_terms + 1.
-createMono(NewKid, Coef/2, 0, S)			:-	_selected(action(data(Plus, XSquare, XMonom, Const), compSquare), S),
-												holds(XMonom, field(nodeCoef, Coef), S),
-												coeffValue(Coef),
-												newKidOnTheBlock(Parent, NewKid, S),
-												NewKid == Parent*max_terms + 2.
+createNewStdBinomial(XSquare, Coef/2, S ; XMonom, Coef/2, S)	:-	_selected(action(data(Plus, XSquare, XMonom, Const), compSquare), S),
+																	holds(XMonom, field(nodeCoef, Coef), S),
+																	coeffValue(Coef).
 
 % --version 2
 deleteChild(Plus, Const, S)				:-	_selected(action(data(Plus, XSquare, XMonom, Const, ResidualCoef), compSquare), S).
@@ -65,18 +71,9 @@ convertToOperWithKids(XSquare, mul, 2, S)	:-	_selected(action(data(Plus, XSquare
 convertToOperWithKids(Kid, add, 2, S)	:-	_selected(action(data(Plus, XSquare, XMonom, Const, ResidualCoef), compSquare), S),
 											newKidOnTheBlock(XSquare, Kid, S).
 
-createMono(Kid, 1, 1, S)	:-	_selected(action(data(Plus, XSquare, XMonom, Const, ResidualCoef), compSquare), S),
-											newKidOnTheBlock(Binomial, Kid, S),
-											Binomial != XSquare,
-											Kid == Binomial*max_terms + 1.
-
-createMono(Kid, Coef/2, 0, S)	:-	_selected(action(data(Plus, XSquare, XMonom, Const, ResidualCoef), compSquare), S),
+createNewStdBinomial(Kid, Coef/2, S)	:-	_selected(action(data(Plus, XSquare, XMonom, Const, ResidualCoef), compSquare), S),
 											holds(XMonom, field(nodeCoef, Coef), S),
-											newKidOnTheBlock(Binomial, Kid, S),
-											Binomial != XSquare,
-											Kid == Binomial*max_terms + 2.
-
-
+											newKidOnTheBlock(XSquare, Kid, S).
 
 
 %================================================================================
@@ -110,19 +107,13 @@ deleteChild(Plus, Const, S)				:-	_selected(action(data(Plus, CoefD, CoefE), fac
 % convert XSquare and XMonom children to binomials
 convertToOperWithKids(XSquare, add, 2, S ; XMonom, add, 2, S )	:-	_selected(action(data(Plus, CoefD, CoefE), factorQuad), S),
 																	holds(stdQuadPoly(Plus, children(XSquare, XMonom, Const)), S).
-createMono(Kid, 1, 1, S)										:-	_selected(action(data(Plus, CoefD, CoefE), factorQuad), S),
-																	newKidOnTheBlock(Parent, Kid, S),
-																	Kid == Parent*max_terms + 1. % first child of parent
-createMono(Kid, CoefD, 0, S)									:-	_selected(action(data(Plus, CoefD, CoefE), factorQuad), S),
-																	holds(stdQuadPoly(Plus, children(XSquare, XMonom, Const)), S),
-																	newKidOnTheBlock(XSquare, Kid, S),
-																	Kid == XSquare*max_terms + 2.
-createMono(Kid, CoefE, 0, S)									:-	_selected(action(data(Plus, CoefD, CoefE), factorQuad), S),
-																	holds(stdQuadPoly(Plus, children(XSquare, XMonom, Const)), S),
-																	newKidOnTheBlock(XMonom, Kid, S),
-																	Kid == XMonom*max_terms + 2.
+createNewStdBinomial(XSquare, CoefD, S ; XMonom, CoefE, S)		:-	_selected(action(data(Plus, CoefD, CoefE), factorQuad), S), 
+																	holds(stdQuadPoly(Plus, children(XSquare, XMonom, Const)), S).
+
 %================================================================================
 %================================================================================
+
+
 %================================================================================
 % factorQuad: x^2 - c^2 --> (x + c)*(x + c) 
 %================================================================================
@@ -142,17 +133,9 @@ update(Plus, field(nodeOper, mul), S)	:-	_selected(action(data(quadNoXTerm(Plus,
 
 % convert XSquare and XMonom children to binomials
 convertToOperWithKids(XSquare, add, 2, S ; Const, add, 2, S )	:-	_selected(action(data(quadNoXTerm(Plus, children(XSquare, Const))), factorQuad), S).
-createMono(Kid, 1, 1, S)										:-	_selected(action(data(quadNoXTerm(Plus, children(XSquare, Const))), factorQuad), S),
-																	newKidOnTheBlock(Parent, Kid, S),
-																	Kid == Parent*max_terms + 1. % first child of parent
-createMono(Kid, C1, 0, S)									:-	_selected(action(data(quadNoXTerm(Plus, children(XSquare, Const))), factorQuad), S),
-																	newKidOnTheBlock(XSquare, Kid, S),
-																	factorDecomp(C1, C2, S),
-																	Kid == XSquare*max_terms + 2.
-createMono(Kid, C2, 0, S)									:-	_selected(action(data(quadNoXTerm(Plus, children(XSquare, Const))), factorQuad), S),
-																	newKidOnTheBlock(XMonom, Kid, S),
-																	factorDecomp(C1, C2, S),
-																	Kid == Const*max_terms + 2.
+createNewStdBinomial(XSquare, C1, S ; Const, C2, S)				:-	_selected(action(data(quadNoXTerm(Plus, children(XSquare, Const))), factorQuad), S),
+																	factorDecomp(C1, C2, S).
+
 %================================================================================
 %================================================================================
 %:- not action(factorQuad).
