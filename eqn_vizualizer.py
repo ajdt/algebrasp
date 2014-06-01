@@ -13,6 +13,7 @@
 import sys
 import json
 import re
+import sympy as sp
 from collections import defaultdict
 import pdb
 
@@ -50,10 +51,16 @@ def addPredicateEntry(types, operator,mono, degree, coef, children, functor, arg
 		coef[arg1] = arg2
 
 # form the full equation string given dictionaries with data
-def eqnString(types, operator,mono, degree, coef, children):
+def eqnString(types, operator,mono, degree, coef, children, in_latex=False):
 	left	= formPolyString(types, operator,mono, degree, coef, children, '1')
 	right	= formPolyString(types, operator,mono, degree, coef, children, '2')
-	return  left[1:-1] + '=' + right[1:-1]	# NOTE: slicing to avoid outermost parens
+	if in_latex:
+		string =  '$$' + sp.latex( sp.sympify(left)) + '=' + sp.latex( sp.sympify(right)) + '$$'
+	else:
+		string = left[1:-1] + '=' + right[1:-1] # NOTE: slicing to avoid outermost parens
+	#print string
+	return string
+	
 
 def formPolyString(types, operator,mono, degree, coef, children, root):
 	if types[root] == 'mono':

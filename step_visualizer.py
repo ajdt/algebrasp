@@ -26,7 +26,7 @@ def makeDefDictList():
 	return defaultdict(list)
 
 # forms an equation string for each step
-def formEqnStepString(predicates_list):
+def formEqnStepString(predicates_list, in_latex=False):
 	# for each dictionary: key (step number) --> dictionary of predicate values at that step
 	types, operator			= defaultdict(dict), defaultdict(dict) 		# key is node id in all cases
 	mono, degree, coef		= defaultdict(dict), defaultdict(dict), defaultdict(dict)
@@ -43,16 +43,26 @@ def formEqnStepString(predicates_list):
 	every_step = []
 	# for every step, lookup
 	for step in sorted(all_steps):
-		every_step.append(str(step) + ':\t' + eqnString(types[step], operator[step], mono[step], degree[step], coef[step], children[step]))
+		step_string = eqnString(types[step], operator[step], mono[step], degree[step], coef[step], children[step], in_latex)
+		if in_latex:
+			every_step.append(step_string)
+		else:
+			every_step.append(str(step) + ':\t' + step_string)
 
-	return '\n'.join(every_step) + '\n'
+	return '\n'.join(every_step) + '---------------------------\n\n' 
 
 def main():
 	clasp_output = ''.join(sys.stdin.xreadlines())
 	decoded = json.loads(clasp_output)
 	all_soln = decoded['Call'][0]['Witnesses']
+	# check if latex is requested
+	if len(sys.argv) == 2 and sys.argv[1] == '--latex':
+		in_latex = True
+	else:
+		in_latex = False
+	# get all solutions
 	for solution in all_soln:
-		print formEqnStepString(solution['Value'])
+		print formEqnStepString(solution['Value'], in_latex)
 
 if __name__ == "__main__":
 	main()
