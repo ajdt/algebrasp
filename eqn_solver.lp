@@ -283,6 +283,25 @@ _validChildOf(Parent, Child) :- node(Parent),
 								node(Child),
 								Child > Parent*max_terms,
 								Child <= Parent*max_terms + max_terms.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% DESCRIPTIVE ATTRIBUTES %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+holds(subtreeTriple(Root, children(Left, Middle, Right)), S)	:-	holds(Root, field(parentOf, Left), S),
+															holds(Root, field(parentOf, Middle), S),
+															holds(Root, field(parentOf, Right), S),
+															Left < Middle,
+															Middle < Right,
+															_validChildOf(Root, Left),
+															_validChildOf(Root, Middle),
+															_validChildOf(Root, Right),
+															step(S).
+
+holds(stdQuadPoly(Plus, children(XSquare, XMonom, Const)), S) :- holds(subtreeTriple(Plus, children(XSquare, XMonom, Const)), S),
+																		Plus == 1,
+																		holds(Plus, field(nodeOper, add), S),
+																		holds(XSquare, field(nodeDeg, 2), S),	
+																		holds(XMonom, field(nodeDeg, 1), S),	
+																		holds(Const, field(nodeDeg, 0), S),		
+																		step(S).
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%% RULE SELECTION %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % possible actions:
 %	each possible action is valid at a particular point in time
