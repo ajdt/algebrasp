@@ -5,7 +5,7 @@
 %
 % NOTE: this file depends on eqn_rule for the rules used to solve an equation!
 
-#const max_steps = 3. % max number of actions until a solution is reached
+#const max_steps = 1. % max number of actions until a solution is reached
 step(0..max_steps). 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%% INITIAL EQN FACTS %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -76,6 +76,22 @@ assigned(Node, field(nodeCoef, Coef), S) :- createMono(Node, Coef, Deg, S),
 assigned(Node, field(type, mono), S) :- createMono(Node, Coef, Deg, S),
 											node(Node), coeffValue(Coef), degree(Deg),
 											step(S).
+
+% 						### CREATING A BINOMIAL
+%--------------------------------------------------------------------------------
+% creates a standard binomial (x+A) rooted at "Plus" 
+createMono(Kid, 1, 1, S)	:-	createNewStdBinomial(Plus, Coef, S), 
+								newKidOnTheBlock(Plus, Kid, S),
+								Kid == Plus*max_terms + 1,
+								coeffValue(Coef),
+								node(Plus).
+
+createMono(Kid, Coef, 0, S)	:-	createNewStdBinomial(Plus, Coef, S), 
+								newKidOnTheBlock(Plus, Kid, S),
+								Kid == Plus*max_terms + 2,
+								coeffValue(Coef),
+								node(Plus).
+
 
 % 						### DELETING A NODE
 %--------------------------------------------------------------------------------
@@ -269,6 +285,7 @@ sameCoef(N1, N2, S) :-	holds(N1, field(nodeCoef, Coef), S),
 						N1 != temp,
 						N2 != one,
 						N2 != temp,
+						N1 != N2,
 						node(N2),
 						coeffValue(Coef).
 equalMonom(C1, C2, S)	:-	step(S),
@@ -285,6 +302,12 @@ _validChildOf(Parent, Child) :- node(Parent),
 								Child <= Parent*max_terms + max_terms.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%% DESCRIPTIVE ATTRIBUTES %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+holds(subtreePair(Root, children(Left, Right)), S)	:-	holds(Root, field(parentOf, Left), S),
+														holds(Root, field(parentOf, Right), S),
+														Left < Right,
+														_validChildOf(Root, Left),
+														_validChildOf(Root, Right),
+														step(S).
 holds(subtreeTriple(Root, children(Left, Middle, Right)), S)	:-	holds(Root, field(parentOf, Left), S),
 															holds(Root, field(parentOf, Middle), S),
 															holds(Root, field(parentOf, Right), S),
@@ -295,6 +318,12 @@ holds(subtreeTriple(Root, children(Left, Middle, Right)), S)	:-	holds(Root, fiel
 															_validChildOf(Root, Right),
 															step(S).
 
+holds(quadNoXTerm(Plus, children(XSquare, Const)), S) :- holds(subtreePair(Plus, children(XSquare, Const)), S),
+																		Plus == 1,
+																		holds(Plus, field(nodeOper, add), S),
+																		holds(XSquare, field(nodeDeg, 2), S),	
+																		holds(Const, field(nodeDeg, 0), S),		
+																		step(S).
 holds(stdQuadPoly(Plus, children(XSquare, XMonom, Const)), S) :- holds(subtreeTriple(Plus, children(XSquare, XMonom, Const)), S),
 																		Plus == 1,
 																		holds(Plus, field(nodeOper, add), S),
@@ -302,6 +331,10 @@ holds(stdQuadPoly(Plus, children(XSquare, XMonom, Const)), S) :- holds(subtreeTr
 																		holds(XMonom, field(nodeDeg, 1), S),	
 																		holds(Const, field(nodeDeg, 0), S),		
 																		step(S).
+rhsIsZero(S) :- holds(2, field(type, mono), S),
+				holds(2, field(nodeCoef, 0), S).
+
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%% RULE SELECTION %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % possible actions:
 %	each possible action is valid at a particular point in time
@@ -376,9 +409,13 @@ _nodeDeg(ID, D, S)			:-	holds(ID, field(nodeDeg,D), S).
 _numer(ID, D, S)			:-	holds(ID, field(numer,D), S).		
 _denom(ID, D, S)			:-	holds(ID, field(denom,D), S).		
 
+_assigned(X,Y,Z):- assigned(X,Y,Z).
+_removed(X,Y,Z):- assigned(X,Y,Z).
 %#show holds/2.
 %#show action/1.
 #show action/1.
+#show _assigned/3.
+%#show _removed/3.
 %#show _node/1.
 %#show _type/2.
 %#show _nodeOper/2.

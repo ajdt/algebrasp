@@ -1,31 +1,3 @@
-rhsIsZero(S) :- holds(2, field(type, mono), S),
-				holds(2, field(nodeCoef, 0), S).
-holds(subtreePair(Root, children(Left, Right)), S)	:-	holds(Root, field(parentOf, Left), S),
-														holds(Root, field(parentOf, Right), S),
-														Left < Right,
-														_validChildOf(Root, Left),
-														_validChildOf(Root, Right),
-														step(S).
-holds(quadNoXTerm(Plus, children(XSquare, Const)), S) :- holds(subtreePair(Plus, children(XSquare, Const)), S),
-																		Plus == 1,
-																		holds(Plus, field(nodeOper, add), S),
-																		holds(XSquare, field(nodeDeg, 2), S),	
-																		holds(Const, field(nodeDeg, 0), S),		
-																		step(S).
-
-createMono(Kid, 1, 1, S)	:-	createNewStdBinomial(Plus, Coef, S), 
-								newKidOnTheBlock(Plus, Kid, S),
-								Kid == Plus*max_terms + 1,
-								coeffValue(Coef),
-								node(Plus).
-
-createMono(Kid, Coef, 0, S)	:-	createNewStdBinomial(Plus, Coef, S), 
-								newKidOnTheBlock(Plus, Kid, S),
-								Kid == Plus*max_terms + 2,
-								coeffValue(Coef),
-								node(Plus).
-
-
 %================================================================================
 % compSquare: x^2 + b*x + c --> (x + b/2)*(x + b/2) + c - b^2/4
 %================================================================================
