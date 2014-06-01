@@ -65,40 +65,37 @@
 %================================================================================
 
 %================================================================================
-% sum of squares
+% Complete the Square Features
 %================================================================================
-sumOfSquares	:-	holds(Sum, field(nodeOper, add), 0),
-					holds(Sum, field(parentOf, XTerm), 0),
-					holds(Sum, field(parentOf, ConstTerm), 0),
-					_validChildOf(Sum, XTerm),
-					_validChildOf(Sum, ConstTerm),
-					holds(XTerm, field(nodeCoef, 1), 0),
-					holds(XTerm, field(nodeDeg, 2), 0),
-					holds(ConstTerm, field(nodeCoef, Square*Square), 0),
-					coeffValue(Square),
-					Square != 0 .
+feature(compSquareWithoutAddTerm)	:-	_selected(action(data(Plus, XSquare, XMonom, Const), compSquare), S).
 
-:- 0 {holds(Node, field(nodeOper, add), 0) : node(Node) } 0, useAddOper.
-:- 1 {holds(Node, field(nodeOper, add), 0) : node(Node) } , noAddOper.
+feature(compSquareHasAddTerm)		:-	_selected(action(data(Plus, XSquare, XMonom, Const, ResidualCoef), compSquare), S).
+
+%================================================================================
+% Factor features
+%================================================================================
+feature(sumOfSquares)				:-	_selected(action(data(quadNoXTerm(Plus, children(XSquare, Const))), factorQuad), S).
+
+feature(regFactor)					:-	_selected(action(data(Plus, CoefD, CoefE), factorQuad), S).
 
 %================================================================================
 % available features
 %================================================================================
-posOnly.
+%posOnly.
 %noZero.
-noOne.
-useSecondDeg.
+%noOne.
+%useSecondDeg.
 %noSecondDeg.
 %useFirstDeg.
 %noFirstDeg.
 %useConstMono.
-noConstMono.
+%noConstMono.
 %useAddOper.
 %noAddOper.
 %useMulOper.
 %noMulOper.
 %useDivOper.
-noDivOper.
+%noDivOper.
 
 
 %================================================================================
@@ -115,6 +112,7 @@ noDivOper.
 %						_selected(action(Z, divInverse), S+2),
 %						step(S).
 
-:- 3 { holds(Node, field(nodeCoef, Coeff), 0) : node(Node) }, coeffValue(Coeff).
+% todo: delete this, adds variety to a bucket (not needed)
+%:- 3 { holds(Node, field(nodeCoef, Coeff), 0) : node(Node) }, coeffValue(Coeff).
 
 %:- not sumOfSquares.

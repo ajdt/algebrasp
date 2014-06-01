@@ -414,6 +414,7 @@ _removed(X,Y,Z):- assigned(X,Y,Z).
 %#show holds/2.
 %#show action/1.
 #show action/1.
+#show feature/1.
 #show _assigned/3.
 %#show _removed/3.
 %#show _node/1.
