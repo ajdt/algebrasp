@@ -11,3 +11,4 @@
 #const max_degree	= 2.
 #const max_depth 	= 2.
 #const max_terms	= 3.		% max number of children a
+#const max_steps 	= 1. % max number of actions until a solution is reached

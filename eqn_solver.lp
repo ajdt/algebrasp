@@ -5,7 +5,6 @@
 %
 % NOTE: this file depends on eqn_rule for the rules used to solve an equation!
 
-#const max_steps = 1. % max number of actions until a solution is reached
 step(0..max_steps). 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%% INITIAL EQN FACTS %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
