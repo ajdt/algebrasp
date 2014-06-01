@@ -1,12 +1,28 @@
+rhsIsZero(S) :- holds(2, field(type, mono), S),
+				holds(2, field(nodeCoef, 0), S).
 %================================================================================
 % compSquare: x^2 + b*x + c --> (x + b/2)*(x + b/2) + c - b^2/4
 %================================================================================
 possible(action(data(Plus, XSquare, XMonom, Const), compSquare), S)	:-	holds(stdQuadPoly(Plus, children(XSquare, XMonom, Const)), S),
 																		Plus == 1,
+																		rhsIsZero(S),
 																		holds(XSquare, field(nodeCoef, 1), S),
 																		holds(XMonom, field(nodeCoef, Coef), S),
 																		holds(Const, field(nodeCoef, Coef**2/4), S),
 																		coeffValue(Coef), Coef != 0, Coef != 1,
+																		step(S).
+
+possible(action(data(Plus, XSquare, XMonom, Const, ResidualCoef), compSquare), S)	:-	holds(stdQuadPoly(Plus, children(XSquare, XMonom, Const)), S),
+																		Plus == 1,
+																		rhsIsZero(S),
+																		holds(XSquare, field(nodeCoef, 1), S),
+																		holds(XMonom, field(nodeCoef, CoefB), S),
+																		holds(Const, field(nodeCoef, CoefC), S),
+																		coeffValue(CoefB), CoefB != 0, CoefB != 1, CoefB \ 2 == 0,
+																		coeffValue(CoefC), CoefC != 0,
+																		ResidualCoef = CoefC - CoefB**2/4,
+																		ResidualCoef != 0,
+																		coeffValue(ResidualCoef),
 																		step(S).
 
 % 						### APPLYING THE RULE ###
@@ -27,6 +43,29 @@ createMono(NewKid, Coef/2, 0, S)			:-	_selected(action(data(Plus, XSquare, XMono
 												newKidOnTheBlock(Parent, NewKid, S),
 												NewKid == Parent*max_terms + 2.
 
+% --version 2
+deleteChild(Plus, Const, S)				:-	_selected(action(data(Plus, XSquare, XMonom, Const, ResidualCoef), compSquare), S).
+delete(XMonom, S)						:-	_selected(action(data(Plus, XSquare, XMonom, Const, ResidualCoef), compSquare), S).
+createMono(XMonom, ResidualCoef, 0, S)	:-	_selected(action(data(Plus, XSquare, XMonom, Const, ResidualCoef), compSquare), S).
+convertToOperWithKids(XSquare, mul, 2, S)	:-	_selected(action(data(Plus, XSquare, XMonom, Const, ResidualCoef), compSquare), S).
+
+convertToOperWithKids(Kid, add, 2, S)	:-	_selected(action(data(Plus, XSquare, XMonom, Const, ResidualCoef), compSquare), S),
+											newKidOnTheBlock(XSquare, Kid, S).
+
+createMono(Kid, 1, 1, S)	:-	_selected(action(data(Plus, XSquare, XMonom, Const, ResidualCoef), compSquare), S),
+											newKidOnTheBlock(Binomial, Kid, S),
+											Binomial != XSquare,
+											Kid == Binomial*max_terms + 1.
+
+createMono(Kid, Coef/2, 0, S)	:-	_selected(action(data(Plus, XSquare, XMonom, Const, ResidualCoef), compSquare), S),
+											holds(XMonom, field(nodeCoef, Coef), S),
+											newKidOnTheBlock(Binomial, Kid, S),
+											Binomial != XSquare,
+											Kid == Binomial*max_terms + 2.
+
+
+
+
 %================================================================================
 %================================================================================
 
@@ -36,6 +75,7 @@ createMono(NewKid, Coef/2, 0, S)			:-	_selected(action(data(Plus, XSquare, XMono
 % where d + e = b, d * e = c
 %================================================================================
 possible(action(data(Plus, CoefD, CoefE), factorQuad), S)	:-	holds(stdQuadPoly(Plus, children(XSquare, XMonom, Const)), S),
+																rhsIsZero(S),
 																holds(XSquare, field(nodeCoef, 1), S),
 																holds(XMonom, field(nodeCoef, CoefB), S),
 																holds(Const, field(nodeCoef, CoefC), S),
