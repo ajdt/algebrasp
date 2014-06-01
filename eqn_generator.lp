@@ -8,14 +8,7 @@
 % nodes and have operators and children assigned to them. 
 % mono types are leaf nodes, and have coefficient and degree values assigned to them.
 %
-
-
-
-% constants governing monomial values and tree depth
-#const max_coeff	= 5.
-#const max_degree	= 2.
-#const max_depth 	= 2.
-#const max_terms	= 3.		% max number of children a
+% dependencies: requires constants defined in eqn_params
 
 coeffValue(-max_coeff..max_coeff).
 degree(0..max_degree).
