@@ -7,7 +7,7 @@ possible(action(data(Plus, XSquare, XMonom, Const), compSquare), S)	:-	holds(std
 																		holds(XSquare, field(nodeCoef, 1), S),
 																		holds(XMonom, field(nodeCoef, Coef), S),
 																		holds(Const, field(nodeCoef, Coef**2/4), S),
-																		coeffValue(Coef), Coef != 0, Coef != 1,
+																		coeffValue(Coef), Coef != 0, Coef != 1, Coef \ 2 == 0,
 																		step(S).
 
 possible(action(data(Plus, XSquare, XMonom, Const, ResidualCoef), compSquare), S)	:-	holds(stdQuadPoly(Plus, children(XSquare, XMonom, Const)), S),
