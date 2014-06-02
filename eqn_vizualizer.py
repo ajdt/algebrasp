@@ -55,7 +55,7 @@ def eqnString(types, operator,mono, degree, coef, children, in_latex=False):
 	left	= formPolyString(types, operator,mono, degree, coef, children, '1')
 	right	= formPolyString(types, operator,mono, degree, coef, children, '2')
 	if in_latex:
-		string =  '$$' + sp.latex( sp.sympify(left)) + '=' + sp.latex( sp.sympify(right)) + '$$'
+		string =  '$$' + sp.latex( sp.sympify(left, evaluate=False)) + '=' + sp.latex( sp.sympify(right, evaluate=False)) + '$$'
 	else:
 		string = left[1:-1] + '=' + right[1:-1] # NOTE: slicing to avoid outermost parens
 	#print string
