@@ -15,7 +15,8 @@
 #const max_coeff	= 5.
 #const max_degree	= 2.
 #const max_depth 	= 2.
-#const max_terms	= 3.		% max number of children a
+#const max_terms	= 2.		% max number of children a
+#const branch_factor = 2*max_terms.
 
 coeffValue(-max_coeff..max_coeff).
 degree(0..max_degree).
@@ -41,7 +42,11 @@ depth(ID,0)		:- root(ID,S). 		% every root starts at depth zero
 type(ID, mono)							:-	node(ID), depth(ID, Depth), Depth >= max_depth. 			
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%% POLY NODES  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-1 {nodeOper(ID, Op) : operator(Op) } 1 				:-	type(ID, poly) .										% poly nodes have a single operator...
+1 {nodeOper(ID, Op) : operator(Op) } 1 				:-	type(ID, poly),
+														depth(ID, Depth), Depth < max_depth - 1.										% poly nodes have a single operator...
+nodeOper(ID, add)  									:-	type(ID, poly),
+														depth(ID, Depth), Depth = max_depth - 1.
+													
 1 { numChildren(ID, Terms) : termNum(Terms) } 1 	:-	type(ID, poly), not nodeOper(ID, div).					% ..and some number of children 
 numChildren(ID, 2) 									:-	type(ID, poly), nodeOper(ID, div).						% divison operators have exactly two children
 
